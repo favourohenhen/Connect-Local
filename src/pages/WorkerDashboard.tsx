@@ -49,7 +49,7 @@ export default function WorkerDashboard() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('workers')
         .select('*, profiles!workers_id_fkey(full_name)')
         .eq('id', user?.id)

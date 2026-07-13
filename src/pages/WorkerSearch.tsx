@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, MapPin, ArrowLeft, X, Phone, Star, ShieldCheck } from 'lucide-react';
+import { Search, MapPin, ArrowLeft, Phone, Star, ShieldCheck } from 'lucide-react';
 
 interface WorkerSummary {
   id: string;

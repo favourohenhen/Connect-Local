@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, Navigation } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
