@@ -52,12 +52,12 @@ export default function Landing() {
         <div className="flex flex-col gap-8 mx-auto max-w-4xl z-10 w-full">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.3] font-bold text-center relative md:mx-auto">
             <div className="hidden md:block absolute text-xs bg-primary rounded-xl p-2 text-white font-medium -top-8 -left-12 -rotate-12">
-              Verified Professionals by the Community
+              Built on trust. Powered by your community.
             </div>
-            Find local professionals for everything you need
+            Connect with reliable workers in Urhumwon
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl leading-[1.5] text-gray-600 text-center mx-auto max-w-[630px]">
-            From cleaning to car repairs to glam makeovers — Connect Local connects you with the right pros, fast in the Community.
+            Fast, verified, and right around the corner. From plumbing to electrician, we connect you with trusted local pros for every job.
           </p>
 
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row mx-auto w-full md:max-w-3xl items-center bg-white shadow-xl border border-gray-200 rounded-3xl md:rounded-full p-2 md:pl-4">
