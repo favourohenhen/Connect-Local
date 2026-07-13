@@ -5,7 +5,7 @@ Connect Local is a community-driven platform designed specifically for Urhumwon 
 ## Features
 
 * **Real-time Local Search:** Instantly filter professionals by service category (e.g., Plumbers, Electricians, Carpenters) and specific street names (e.g., Mechanic Road, Osakue Road, Idada Street).
-* **Community Trust System:** A transparent trust engine where a professional's standing is completely driven by community recommendations (1 Recommendation = 1% Trust).
+* **Community Trust System:** A transparent trust engine where a professional's standing is completely driven by community recommendations.
 * **Professional Profiles & Portfolios:** Workers can showcase their specific skills, specialties, bio, and cover images to stand out.
 * **Direct Contact:** 1-click "Call Directly" integration that seamlessly opens native phone dialers on mobile or copies the number to the clipboard on desktop.
 * **Worker Dashboard:** A self-serve portal for professionals to manage their availability, update their portfolio, track their profile completion percentage, and permanently delete their account.
@@ -45,4 +45,3 @@ Connect Local is a community-driven platform designed specifically for Urhumwon 
 4. Open your browser and navigate to `http://localhost:5173`.
 
 
-## Application is in production phases
