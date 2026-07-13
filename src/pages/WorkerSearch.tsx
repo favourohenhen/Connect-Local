@@ -194,7 +194,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
     is_available: true,
     bio: 'Professional solar panel installation, inverter setups, and battery maintenance. 24/7 power guaranteed.',
     profile_image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1584276435606-d71628d0eb4b?w=800&h=400&fit=crop',
+    cover_image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=800&h=400&fit=crop',
     recommended_by: 32,
     contact_phone: '+2348000000011',
     specialties: 'Solar Panels, Inverters, Battery Setup',
