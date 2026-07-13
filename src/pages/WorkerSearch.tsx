@@ -60,7 +60,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
     id: 'dummy-3',
     service_category: 'Barber / Hair Stylist',
     location_area: 'Urhumwon',
-    street: 'Urhumwon Primary School',
+    street: ' Opppostie Urhumwon Primary School',
     status: 'verified',
     trust_score: 99,
     is_available: true,
@@ -113,7 +113,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
     trust_score: 85,
     is_available: true,
     bio: 'Screen replacement, charging ports, and software flashing for all iPhone and Android models.',
-    profile_image: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=400&h=400&fit=crop',
+    profile_image: 'https://images.unsplash.com/photo-1539331586018-346b53b2aaa4?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400&h=400&fit=crop',
     cover_image: 'https://images.unsplash.com/photo-1597740985671-2a8a3b80502e?w=800&h=400&fit=crop',
     recommended_by: 31,
     contact_phone: '+2348000000006',
@@ -135,25 +135,103 @@ const DUMMY_WORKERS: WorkerSummary[] = [
     contact_phone: '+2348000000007',
     specialties: 'Dry Cleaning, Ironing, Laundry',
     profiles: { full_name: 'Edo Cleaners' }
+  },
+  {
+    id: 'dummy-8',
+    service_category: 'Borehole Installation',
+    location_area: 'Urhumwon',
+    street: 'Groundnut Junction',
+    status: 'unverified',
+    trust_score: 85,
+    is_available: true,
+    bio: 'Professional borehole drilling, water treatment, and pump installations. We guarantee clean water for your home.',
+    profile_image: 'https://plus.unsplash.com/premium_photo-1664304298826-57235ff43624?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dw=400&h=400&fit=crop',
+    cover_image: 'https://plus.unsplash.com/premium_photo-1664304298826-57235ff43624?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dw=800&h=400&fit=crop',
+    recommended_by: 12,
+    contact_phone: '+2348000000008',
+    specialties: 'Borehole Drilling, Water Treatment, Plumbing',
+    profiles: { full_name: 'AquaTech Drilling' }
+  },
+  {
+    id: 'dummy-9',
+    service_category: 'Painting & Design',
+    location_area: 'Urhumwon',
+    street: 'Mechanic Road',
+    status: 'verified',
+    trust_score: 98,
+    is_available: true,
+    bio: 'Interior and exterior painting, POP designs, and wallpaper installation to beautify your space.',
+    profile_image: 'https://images.unsplash.com/photo-1742900280864-bcc27353ceba?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D=400&h=400&fit=crop',
+    cover_image: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=400&fit=crop',
+    recommended_by: 25,
+    contact_phone: '+2348000000009',
+    specialties: 'Painting, POP Design, Wallpapers',
+    profiles: { full_name: 'ColorSplash Painters' }
+  },
+  {
+    id: 'dummy-10',
+    service_category: 'Tiles Installation',
+    location_area: 'Urhumwon',
+    street: 'Opposite Urhumwon Primary School',
+    status: 'unverified',
+    trust_score: 80,
+    is_available: true,
+    bio: 'Expert tiler for floors, walls, and bathrooms. Clean finishes and precise measurements.',
+    profile_image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&h=400&fit=crop',
+    cover_image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&h=400&fit=crop',
+    recommended_by: 18,
+    contact_phone: '+2348000000010',
+    specialties: 'Floor Tiling, Wall Tiling, Interlocking',
+    profiles: { full_name: 'Precision Tiles & Co.' }
+  },
+  {
+    id: 'dummy-11',
+    service_category: 'Solar Panel Installation',
+    location_area: 'Urhumwon',
+    street: 'Mechanic Road',
+    status: 'verified',
+    trust_score: 96,
+    is_available: true,
+    bio: 'Professional solar panel installation, inverter setups, and battery maintenance. 24/7 power guaranteed.',
+    profile_image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=400&fit=crop',
+    cover_image: 'https://images.unsplash.com/photo-1584276435606-d71628d0eb4b?w=800&h=400&fit=crop',
+    recommended_by: 32,
+    contact_phone: '+2348000000011',
+    specialties: 'Solar Panels, Inverters, Battery Setup',
+    profiles: { full_name: 'SunPower Energy Solutions' }
   }
 ];
 
 export default function WorkerSearch() {
   const [workers, setWorkers] = useState<WorkerSummary[]>([]);
-  const [searchService, setSearchService] = useState('');
-  const [searchStreet, setSearchStreet] = useState('');
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+
+  const [searchService, setSearchService] = useState(params.get('service') || '');
+  const [searchStreet, setSearchStreet] = useState(params.get('street') || '');
   const [loading, setLoading] = useState(true);
 
   // Modal State
   const [selectedWorker, setSelectedWorker] = useState<WorkerSummary | null>(null);
+  const [copiedPhone, setCopiedPhone] = useState(false);
 
-  const location = useLocation();
+  const handleCallClick = (phone?: string) => {
+    if (phone) {
+      navigator.clipboard.writeText(phone);
+      setCopiedPhone(true);
+      setTimeout(() => setCopiedPhone(false), 2000);
+    }
+  };
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const serviceParam = params.get('service');
-    if (serviceParam) {
+    const currentParams = new URLSearchParams(location.search);
+    const serviceParam = currentParams.get('service');
+    const streetParam = currentParams.get('street');
+    if (serviceParam !== null && serviceParam !== searchService) {
       setSearchService(serviceParam);
+    }
+    if (streetParam !== null && streetParam !== searchStreet) {
+      setSearchStreet(streetParam);
     }
   }, [location.search]);
 
@@ -198,16 +276,16 @@ export default function WorkerSearch() {
 
       const dbWorkers = (data as unknown as WorkerSummary[]) || [];
       const completeDbWorkers = dbWorkers.filter(isProfileComplete);
-      
+
       let localWorkers: WorkerSummary[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
       localWorkers = localWorkers.filter(isProfileComplete);
-      
+
       if (serviceTerm) {
         localWorkers = localWorkers.filter(w => w.service_category.toLowerCase().includes(serviceTerm.toLowerCase()));
       }
       if (streetTerm) {
-        localWorkers = localWorkers.filter(w => 
-          w.street?.toLowerCase().includes(streetTerm.toLowerCase()) || 
+        localWorkers = localWorkers.filter(w =>
+          w.street?.toLowerCase().includes(streetTerm.toLowerCase()) ||
           w.location_area?.toLowerCase().includes(streetTerm.toLowerCase())
         );
       }
@@ -266,7 +344,7 @@ export default function WorkerSearch() {
             <input
               type="text"
               list="street-options"
-              placeholder="Filter by Street (e.g. Siluko Road)"
+              placeholder="Filter by Street (e.g. Mechanic Road)"
               value={searchStreet}
               onChange={(e) => setSearchStreet(e.target.value)}
               className="w-full bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
@@ -465,9 +543,11 @@ export default function WorkerSearch() {
                     {selectedWorker.is_available ? (
                       <a
                         href={`tel:${selectedWorker.contact_phone}`}
+                        onClick={() => handleCallClick(selectedWorker.contact_phone)}
                         className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
                       >
-                        <Phone className="w-6 h-6" /> {selectedWorker.contact_phone ? `Call ${selectedWorker.contact_phone}` : 'Call Directly'}
+                        <Phone className="w-6 h-6" />
+                        {copiedPhone ? 'Number Copied!' : (selectedWorker.contact_phone ? `Call ${selectedWorker.contact_phone}` : 'Call Directly')}
                       </a>
                     ) : (
                       <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-200 text-gray-500 py-4 rounded-full font-bold text-lg cursor-not-allowed">

@@ -1,75 +1,48 @@
-# React + TypeScript + Vite
+# Connect Local
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Connect Local is a community-driven platform designed specifically for Urhumwon Community. It bridges the gap between residents and skilled local professionals, making it incredibly easy to find, verify, and contact trusted service providers right in your neighborhood.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* **Real-time Local Search:** Instantly filter professionals by service category (e.g., Plumbers, Electricians, Carpenters) and specific street names (e.g., Mechanic Road, Osakue Road, Idada Street).
+* **Community Trust System:** A transparent trust engine where a professional's standing is completely driven by community recommendations (1 Recommendation = 1% Trust).
+* **Professional Profiles & Portfolios:** Workers can showcase their specific skills, specialties, bio, and cover images to stand out.
+* **Direct Contact:** 1-click "Call Directly" integration that seamlessly opens native phone dialers on mobile or copies the number to the clipboard on desktop.
+* **Worker Dashboard:** A self-serve portal for professionals to manage their availability, update their portfolio, track their profile completion percentage, and permanently delete their account.
+* **"NEW" Worker Highlights:** Newly registered professionals are pinned to the top of search results with visual badges to help them get initial traction.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Frontend Framework:** React 19 + Vite
+* **Styling:** Tailwind CSS
+* **State Management:** Zustand
+* **Icons:** Lucide React
+* **Backend & Database:** Supabase (with fallback local browser storage for rapid offline prototyping)
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
+* Node.js
+* npm
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Installation
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Navigate to the project directory:
+   ```bash
+   cd "Connect local"
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+4. Open your browser and navigate to `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+## Application is in production phases

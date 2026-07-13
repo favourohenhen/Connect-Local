@@ -4,21 +4,26 @@ import { Search, MapPin, Navigation } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [service, setService] = React.useState('');
+  const [street, setStreet] = React.useState('');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/search');
+    const params = new URLSearchParams();
+    if (service) params.append('service', service);
+    if (street) params.append('street', street);
+    navigate(`/search?${params.toString()}`);
   };
 
   const popularServices = [
     { name: 'Plumber', img: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
     { name: 'Electrician', img: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-    { name: 'House Cleaning', img: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-    { name: 'Makeup Artist', img: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-    { name: 'Barber', img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-    { name: 'Tailor', img: 'https://images.unsplash.com/photo-1687422809069-0fa3546b8471?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
+    { name: 'Home Cleaning', img: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
+    { name: 'Barber / Hair Stylist', img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
+    { name: 'Laundry & Dry Cleaning', img: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
     { name: 'Carpenter', img: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-    { name: 'Mechanic', img: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
+    { name: 'Phone & Tech Repair', img: 'https://images.unsplash.com/photo-1539331586018-346b53b2aaa4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
+    { name: 'Painting & Design', img: 'https://images.unsplash.com/photo-1742900280864-bcc27353ceba?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
   ];
 
   return (
@@ -58,7 +63,13 @@ export default function Landing() {
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row mx-auto w-full md:max-w-3xl items-center bg-white shadow-xl border border-gray-200 rounded-3xl md:rounded-full p-2 md:pl-4">
             <div className="relative flex flex-1 items-center w-full px-2 py-3 md:py-4">
               <Search className="text-gray-400 w-5 h-5 mr-2 shrink-0" />
-              <input type="text" placeholder="What service do you need?" className="w-full flex-1 border-none focus:outline-none bg-transparent placeholder:text-gray-400 text-base md:text-lg" />
+              <input
+                type="text"
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                placeholder="What service do you need?"
+                className="w-full flex-1 border-none focus:outline-none bg-transparent placeholder:text-gray-400 text-base md:text-lg"
+              />
             </div>
 
             <div className="hidden md:block text-gray-300 mx-2">|</div>
@@ -66,10 +77,21 @@ export default function Landing() {
 
             <div className="relative flex flex-1 items-center w-full px-2 py-3 md:py-4">
               <MapPin className="text-gray-400 w-5 h-5 mr-2 shrink-0" />
-              <input type="text" defaultValue="Urhumwon, Egor" disabled className="w-full min-w-0 flex-1 border-none focus:outline-none bg-transparent placeholder:text-gray-400 text-base md:text-lg" />
-              <button type="button" className="shrink-0 p-2 text-gray-400 hover:bg-gray-100 rounded-full" title="Detect my location">
-                <Navigation className="w-4 h-4" />
-              </button>
+              <input
+                type="text"
+                list="landing-street-options"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                placeholder="Which street? (e.g. Mechanic Road)"
+                className="w-full min-w-0 flex-1 border-none focus:outline-none bg-transparent placeholder:text-gray-400 text-base md:text-lg"
+              />
+              <datalist id="landing-street-options">
+                <option value="Mechanic Road" />
+                <option value="Osakue Road" />
+                <option value="Urhumwon Primary School" />
+                <option value="Idada Street" />
+                <option value="Groundnut Junction" />
+              </datalist>
             </div>
 
             <button type="submit" className="w-full md:w-auto bg-primary hover:bg-primary-dark text-white rounded-full px-8 py-3 md:py-4 font-medium text-base md:text-lg transition-all mt-2 md:mt-0 md:mr-1">
