@@ -40,6 +40,7 @@ export default function Landing() {
         </div>
         {/* Mobile menu simple fallback */}
         <div className="md:hidden flex gap-4 items-center">
+          <Link to="/search" className="text-primary font-medium text-sm">Find a Pro</Link>
           <Link to="/signup" className="text-primary font-medium text-sm">Join as Pro</Link>
         </div>
       </header>
@@ -54,7 +55,7 @@ export default function Landing() {
             <div className="hidden md:block absolute text-xs bg-primary rounded-xl p-2 text-white font-medium -top-8 -left-12 -rotate-12">
               Built on trust. Powered by your community.
             </div>
-            Connect with reliable workers in Urhumwon
+            Connect with reliable workers in Urumwon
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl leading-[1.5] text-gray-600 text-center mx-auto max-w-[630px]">
             Fast, verified, and right around the corner. From plumbing to electrician, we connect you with trusted local pros for every job.
@@ -154,7 +155,11 @@ export default function Landing() {
           <p className="text-lg text-center text-gray-600 mx-auto max-w-2xl mb-12">
             Discover the most in-demand services trusted by residents across Urhumwon.
           </p>
-
+          <div className="text-center mt-12">
+            <Link to="/search" className="inline-block bg-white text-gray-900 border border-gray-300 hover:border-gray-400 font-medium rounded-full px-8 py-3 transition-all">
+              View all services
+            </Link>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {popularServices.map((service, idx) => (
               <Link to={`/search?service=${encodeURIComponent(service.name)}`} key={idx} className="group relative rounded-xl overflow-hidden h-[250px] md:h-[300px] w-full shadow-sm hover:shadow-xl transition-all duration-300">
@@ -166,11 +171,7 @@ export default function Landing() {
               </Link>
             ))}
           </div>
-          <div className="text-center mt-12">
-            <Link to="/search" className="inline-block bg-white text-gray-900 border border-gray-300 hover:border-gray-400 font-medium rounded-full px-8 py-3 transition-all">
-              View all services
-            </Link>
-          </div>
+
         </div>
       </section>
 
@@ -178,7 +179,7 @@ export default function Landing() {
       <footer className="bg-gray-900 py-12 text-center text-gray-400">
         <div className="container mx-auto px-4">
           <div className="text-2xl font-bold text-white tracking-tight mb-4">Connect Local</div>
-          <p className="mb-8">Built for Urhumwon Community, Egor LGA.</p>
+          <p className="mb-8">Built for Urumwon Community, Egor LGA.</p>
           <p className="text-sm">&copy; {new Date().getFullYear()} Connect Local. All rights reserved.</p>
         </div>
       </footer>
