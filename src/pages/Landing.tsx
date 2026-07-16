@@ -153,9 +153,9 @@ export default function Landing() {
         <div className="container mx-auto px-4 max-w-6xl">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-6">Popular services</h2>
           <p className="text-lg text-center text-gray-600 mx-auto max-w-2xl mb-12">
-            Discover the most in-demand services trusted by residents across Urhumwon.
+            Discover the most in-demand services trusted by residents across Urumwon.
           </p>
-          <div className="text-center mt-12">
+          <div className="text-center mt-6 mb-6">
             <Link to="/search" className="inline-block bg-white text-gray-900 border border-gray-300 hover:border-gray-400 font-medium rounded-full px-8 py-3 transition-all">
               View all services
             </Link>
