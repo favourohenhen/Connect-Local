@@ -27,7 +27,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-1',
     service_category: 'Plumber',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Mechanic Road',
     status: 'verified',
     trust_score: 98,
@@ -43,7 +43,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-2',
     service_category: 'Electrician',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Osakue Road',
     status: 'verified',
     trust_score: 95,
@@ -75,7 +75,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-4',
     service_category: 'Home Cleaning',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Idada Street',
     status: 'verified',
     trust_score: 92,
@@ -91,7 +91,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-5',
     service_category: 'Carpenter',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Groundnut Junction',
     status: 'verified',
     trust_score: 94,
@@ -107,7 +107,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-6',
     service_category: 'Phone & Tech Repair',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Mechanic Road',
     status: 'unverified',
     trust_score: 85,
@@ -123,7 +123,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-7',
     service_category: 'Laundry & Dry Cleaning',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Osakue Road',
     status: 'verified',
     trust_score: 97,
@@ -139,7 +139,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-8',
     service_category: 'Borehole Installation',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Groundnut Junction',
     status: 'unverified',
     trust_score: 85,
@@ -155,7 +155,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-9',
     service_category: 'Painting & Design',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Mechanic Road',
     status: 'verified',
     trust_score: 98,
@@ -187,7 +187,7 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-11',
     service_category: 'Solar Panel Installation',
-    location_area: 'Urhumwon',
+    location_area: 'Urumwon',
     street: 'Mechanic Road',
     status: 'verified',
     trust_score: 96,

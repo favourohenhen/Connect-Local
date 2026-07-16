@@ -89,7 +89,7 @@ export default function Landing() {
               <datalist id="landing-street-options">
                 <option value="Mechanic Road" />
                 <option value="Osakue Road" />
-                <option value="Urhumwon Primary School" />
+                <option value="Opposite Urumwon Primary School" />
                 <option value="Idada Street" />
                 <option value="Groundnut Junction" />
               </datalist>
@@ -107,7 +107,7 @@ export default function Landing() {
         <div className="flex mx-auto w-full max-w-4xl rounded-3xl py-6 md:py-8 px-6 bg-primary flex-col md:flex-row text-center shadow-lg">
           <div className="flex-1 flex flex-col p-4 border-b md:border-b-0 md:border-r border-white/20">
             <h3 className="text-3xl lg:text-4xl text-white font-bold pb-2">100%</h3>
-            <p className="text-blue-100 text-sm md:text-base">Local to Urhumwon</p>
+            <p className="text-blue-100 text-sm md:text-base">Local to Urumwon</p>
           </div>
           <div className="flex-1 flex flex-col p-4 border-b md:border-b-0 md:border-r border-white/20">
             <h3 className="text-3xl lg:text-4xl text-white font-bold pb-2">Verified</h3>
