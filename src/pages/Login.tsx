@@ -8,6 +8,7 @@ export default function Login() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -17,6 +18,12 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (phone.length !== 11) {
+      setError('Phone number must be exactly 11 digits.');
+      return;
+    }
+
     setLoading(true);
 
     // Construct placeholder email from phone number
@@ -53,6 +60,16 @@ export default function Login() {
     }
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numericValue = e.target.value.replace(/\D/g, '');
+    if (numericValue.length > 0 && numericValue.length !== 11) {
+      setPhoneError('Phone number must be exactly 11 digits (e.g. 08012345678).');
+    } else {
+      setPhoneError('');
+    }
+    setPhone(numericValue);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
       <Link to="/" className="absolute top-6 left-6 text-gray-500 hover:text-gray-900 flex items-center gap-2 font-medium transition-colors">
@@ -78,11 +95,13 @@ export default function Login() {
                 type="tel"
                 required
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                onChange={handlePhoneChange}
+                maxLength={11}
+                className={`w-full pl-11 pr-4 py-3 rounded-lg border ${phoneError ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all`}
                 placeholder="e.g. 08012345678"
               />
             </div>
+            {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
           </div>
 
           <div>

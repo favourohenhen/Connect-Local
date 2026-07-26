@@ -12,6 +12,7 @@ export default function Signup() {
   // Step State
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,7 +39,17 @@ export default function Signup() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'phone') {
+      const numericValue = value.replace(/\D/g, '');
+      if (numericValue.length > 0 && numericValue.length !== 11) {
+        setPhoneError('Phone number must be exactly 11 digits (e.g. 08012345678).');
+      } else {
+        setPhoneError('');
+      }
+      setFormData(prev => ({ ...prev, [name]: numericValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const generatePassword = () => {
@@ -64,6 +75,11 @@ export default function Signup() {
     setError('');
     if (!formData.fullName || !formData.phone || !formData.password || !formData.street || !formData.bio) {
       setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (formData.phone.length !== 11) {
+      setError('Phone number must be exactly 11 digits.');
       return;
     }
     
@@ -190,7 +206,8 @@ export default function Signup() {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Phone Number *</label>
-                <input type="tel" name="phone" required value={formData.phone} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-gray-50" placeholder="0800 000 0000" />
+                <input type="tel" name="phone" required value={formData.phone} onChange={handleInputChange} maxLength={11} className={`w-full px-4 py-3 rounded-xl border ${phoneError ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-gray-50`} placeholder="08012345678" />
+                {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
               </div>
 
               <div>
