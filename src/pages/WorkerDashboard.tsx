@@ -33,7 +33,7 @@ export default function WorkerDashboard() {
     try {
       const { data } = await supabase
         .from('workers')
-        .select('*, profiles(full_name)')
+        .select('*, profiles!workers_id_fkey(full_name)')
         .eq('id', user?.id)
         .maybeSingle();
       

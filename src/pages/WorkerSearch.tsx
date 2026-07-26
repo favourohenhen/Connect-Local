@@ -233,7 +233,7 @@ export default function WorkerSearch() {
   const fetchWorkers = async (serviceTerm = '', streetTerm = '') => {
     setLoading(true);
     try {
-      let query = supabase.from('workers').select('id, service_category, location_area, street, status, trust_score, is_available, created_at, bio, profile_image_url, cover_image, recommended_by, contact_phone, specialties, profiles(full_name)');
+      let query = supabase.from('workers').select('id, service_category, location_area, street, status, trust_score, is_available, created_at, bio, profile_image_url, cover_image, recommended_by, contact_phone, specialties, profiles!workers_id_fkey(full_name)');
 
       if (serviceTerm) {
         query = query.ilike('service_category', `%${serviceTerm}%`);
