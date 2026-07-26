@@ -278,7 +278,7 @@ export default function UserDashboard() {
           {/* Quick Access Services */}
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Popular services</h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {quickServices.map((svc) => (
                 <Link
                   key={svc.name}

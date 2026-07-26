@@ -469,6 +469,10 @@ export default function WorkerSearch() {
       </header>
 
       <div className="flex-1 p-4 w-full max-w-6xl mx-auto">
+        <div className="mb-6 mt-2 md:mt-4 text-center md:text-left">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">Find trusted services in your community</h1>
+          <p className="text-gray-500 text-sm md:text-base max-w-2xl mx-auto md:mx-0">Search for verified local professionals, read community recommendations, and connect with the right person for the job.</p>
+        </div>
         <form onSubmit={handleSearch} className="mb-8 flex flex-col md:flex-row gap-2 bg-white p-2 rounded-2xl md:rounded-full shadow-sm border border-gray-200">
           <div className="flex-1 flex items-center px-4 py-2 border-b md:border-b-0 md:border-r border-gray-100">
             <Search className="text-gray-400 w-5 h-5 mr-3 shrink-0" />

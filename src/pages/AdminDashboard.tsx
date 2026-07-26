@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ShieldCheck, ShieldX, ArrowLeft, Phone, MapPin, LogOut, Eye, RefreshCw } from 'lucide-react';
+import { ShieldCheck, ShieldX, ArrowLeft, Phone, MapPin, LogOut, Eye, RefreshCw, XCircle, Star } from 'lucide-react';
 
 // Hardcoded admin credentials (MVP)
 const ADMIN_PHONE = '08000000000';
@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [workers, setWorkers] = useState<PendingWorker[]>([]);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<PendingWorker | null>(null);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState('');
 
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -297,29 +298,108 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Expandable Preview Panel */}
-                  {preview?.id === worker.id && (
-                    <div className="border-t border-gray-100 bg-gray-50 p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {worker.cover_image && (
-                        <div className="sm:col-span-2">
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Images of Previous Work</p>
-                          <img src={worker.cover_image} alt="Cover" className="w-full h-40 object-cover rounded-xl" />
-                        </div>
-                      )}
-                      {worker.bio && (
-                        <div className="sm:col-span-2">
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Bio</p>
-                          <p className="text-sm text-gray-700 leading-relaxed bg-white p-3 rounded-xl border border-gray-100">{worker.bio}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
       </main>
+
+      {/* Admin Worker Review Modal */}
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={() => setPreview(null)}>
+          <div
+            className="w-full sm:max-w-md flex flex-col max-h-[90vh] animate-in slide-in-from-bottom sm:zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative w-full rounded-t-3xl sm:rounded-3xl overflow-hidden bg-white shadow-2xl flex flex-col">
+              <div 
+                className="absolute top-0 left-0 right-0 h-48 shrink-0 bg-gray-200 group cursor-pointer"
+                onClick={() => setFullscreenImage(preview.cover_image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=800&fit=crop')}
+              >
+                <img src={preview.cover_image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=800&fit=crop'} alt="Cover" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                <button
+                  onClick={() => setPreview(null)}
+                  className="absolute top-4 left-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-md transition-colors z-10"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="relative pt-32 px-4 pb-4 flex-1 overflow-y-auto">
+                <div className="bg-white rounded-2xl shadow-lg p-6 relative">
+                  <div 
+                    className="absolute -top-12 left-6 cursor-pointer group"
+                    onClick={() => setFullscreenImage(preview.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${preview.profiles?.full_name}`)}
+                  >
+                    <img
+                      src={preview.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${preview.profiles?.full_name}`}
+                      alt={preview.profiles?.full_name}
+                      className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-md bg-white transition-transform duration-300 group-hover:scale-110"
+                    />
+                  </div>
+
+                  <div className="mb-6 pt-12">
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      {preview.profiles?.full_name}
+                      {preview.status === 'verified' && <ShieldCheck className="w-6 h-6 text-blue-500" />}
+                    </h2>
+                    <p className="text-primary font-medium text-lg">{preview.service_category}</p>
+                    <p className="text-gray-500 flex items-center gap-1 mt-1 text-sm">
+                      <MapPin className="w-4 h-4" /> {preview.street || preview.location_area || 'Urumwon'}
+                    </p>
+                  </div>
+
+                  <div className="mb-8">
+                    <h3 className="font-bold text-gray-900 mb-2">About</h3>
+                    <p className="text-gray-600 leading-relaxed text-sm">
+                      {preview.bio || 'Professional service provider registered on Connect Local.'}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4">
+                     <button
+                        onClick={() => handleApprove(preview.id)}
+                        className="flex-1 flex items-center justify-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 font-bold py-3.5 rounded-xl text-lg transition-all active:scale-95 border border-green-200 shadow-sm"
+                      >
+                        <ShieldCheck className="w-5 h-5" /> Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(preview.id)}
+                        className="flex-1 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3.5 rounded-xl text-lg transition-all active:scale-95 border border-red-200 shadow-sm"
+                      >
+                        <ShieldX className="w-5 h-5" /> Reject
+                      </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Image Viewer */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-200"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white bg-black/20 hover:bg-black/50 rounded-full transition-colors"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <XCircle className="w-8 h-8" />
+          </button>
+          <img 
+            src={fullscreenImage} 
+            alt="Fullscreen preview" 
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" 
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
     </div>
   );
 }

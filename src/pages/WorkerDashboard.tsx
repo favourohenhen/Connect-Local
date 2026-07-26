@@ -139,8 +139,12 @@ export default function WorkerDashboard() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     if (e.target.files && e.target.files[0]) {
-      const url = URL.createObjectURL(e.target.files[0]);
-      setEditForm(prev => ({ ...prev, [fieldName]: url }));
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditForm(prev => ({ ...prev, [fieldName]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -180,7 +184,7 @@ export default function WorkerDashboard() {
       <main className="flex-1 p-6">
         <div className="max-w-4xl mx-auto space-y-6">
 
-          {/* Pending Approval Banner */}
+          {/* Status Banners */}
           {workerData?.status === 'unverified' && (
             <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-start gap-3">
               <div className="shrink-0 w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mt-0.5">
@@ -193,6 +197,17 @@ export default function WorkerDashboard() {
             </div>
           )}
 
+          {workerData?.status === 'verified' && (
+            <div className="bg-green-50 border border-green-300 rounded-xl p-4 flex items-start gap-3">
+              <div className="shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              </div>
+              <div>
+                <p className="font-bold text-green-800">You are a Verified Pro!</p>
+                <p className="text-green-700 text-sm mt-0.5">Your profile is approved and your card is now visible to all users looking for your services.</p>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Welcome, {workerData?.profiles?.full_name || 'Professional'}!</h2>
