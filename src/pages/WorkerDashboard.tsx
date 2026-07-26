@@ -20,6 +20,8 @@ export default function WorkerDashboard() {
     cover_image: '',
     specialties: '',
   });
+  const [profileImageFile, setProfileImageFile] = React.useState<File | null>(null);
+  const [coverImageFile, setCoverImageFile] = React.useState<File | null>(null);
 
   React.useEffect(() => {
     if (user) {
@@ -29,26 +31,6 @@ export default function WorkerDashboard() {
 
   const fetchWorkerData = async () => {
     try {
-      // Check local storage first
-      const localWorkers = JSON.parse(localStorage.getItem('local_workers') || '[]');
-      const localWorker = localWorkers.find((w: any) => w.id === user?.id);
-      
-      if (localWorker) {
-        setWorkerData(localWorker);
-        setEditForm({
-          contact_phone: localWorker.contact_phone || '',
-          bio: localWorker.bio || '',
-          street: localWorker.street || localWorker.location_area || '',
-          service_category: localWorker.service_category || '',
-          is_available: localWorker.is_available ?? true,
-          profile_image: localWorker.profile_image || localWorker.profile_image_url || '',
-          cover_image: localWorker.cover_image || '',
-          specialties: localWorker.specialties || '',
-        });
-        setLoading(false);
-        return;
-      }
-
       const { data } = await supabase
         .from('workers')
         .select('*, profiles!workers_id_fkey(full_name)')
@@ -60,10 +42,10 @@ export default function WorkerDashboard() {
         setEditForm({
           contact_phone: data.contact_phone || '',
           bio: data.bio || '',
-          street: data.location_area || '',
+          street: data.street || data.location_area || '',
           service_category: data.service_category || '',
           is_available: data.is_available ?? true,
-          profile_image: data.profile_image_url || '',
+          profile_image: data.profile_image_url || data.profile_image || '',
           cover_image: data.cover_image || '',
           specialties: data.specialties || '',
         });
@@ -83,6 +65,30 @@ export default function WorkerDashboard() {
 
   const handleSave = async () => {
     try {
+      setLoading(true);
+      let profileUrl = editForm.profile_image;
+      let coverUrl = editForm.cover_image;
+
+      if (profileImageFile) {
+        const fileExt = profileImageFile.name.split('.').pop();
+        const fileName = `${user?.id}-profile-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('worker_images').upload(fileName, profileImageFile);
+        if (!uploadError) {
+          const { data } = supabase.storage.from('worker_images').getPublicUrl(fileName);
+          profileUrl = data.publicUrl;
+        }
+      }
+
+      if (coverImageFile) {
+        const fileExt = coverImageFile.name.split('.').pop();
+        const fileName = `${user?.id}-cover-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('worker_images').upload(fileName, coverImageFile);
+        if (!uploadError) {
+          const { data } = supabase.storage.from('worker_images').getPublicUrl(fileName);
+          coverUrl = data.publicUrl;
+        }
+      }
+
       const updatePayload = {
         contact_phone: editForm.contact_phone,
         location_area: editForm.street,
@@ -90,39 +96,30 @@ export default function WorkerDashboard() {
         bio: editForm.bio,
         service_category: editForm.service_category,
         is_available: editForm.is_available,
-        profile_image: editForm.profile_image,
-        cover_image: editForm.cover_image,
+        profile_image_url: profileUrl,
+        cover_image: coverUrl,
         specialties: editForm.specialties
       };
       
-      // Update local storage if present
-      const localWorkers = JSON.parse(localStorage.getItem('local_workers') || '[]');
-      const index = localWorkers.findIndex((w: any) => w.id === user?.id);
-      if (index !== -1) {
-        localWorkers[index] = { ...localWorkers[index], ...updatePayload };
-        localStorage.setItem('local_workers', JSON.stringify(localWorkers));
-      } else {
-        // Fallback to Supabase if not locally stored
-        await supabase.from('workers').update({
-          contact_phone: editForm.contact_phone,
-          location_area: editForm.street,
-          service_category: editForm.service_category,
-          is_available: editForm.is_available
-        }).eq('id', user?.id);
-      }
+      const { data, error } = await supabase.from('workers').update(updatePayload).eq('id', user?.id).select().single();
       
-      setWorkerData({ ...workerData, ...editForm, location_area: editForm.street });
+      if (!error && data) {
+        setWorkerData({ ...workerData, ...data, profile_image: profileUrl });
+        setEditForm(prev => ({ ...prev, profile_image: profileUrl, cover_image: coverUrl }));
+        setProfileImageFile(null);
+        setCoverImageFile(null);
+      }
       setEditMode(false);
     } catch (err) {
       console.error('Failed to save profile', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-      const localWorkers = JSON.parse(localStorage.getItem('local_workers') || '[]');
-      const filtered = localWorkers.filter((w: any) => w.id !== user?.id);
-      localStorage.setItem('local_workers', JSON.stringify(filtered));
+      await supabase.from('workers').delete().eq('id', user?.id);
       handleLogout();
     }
   };
@@ -140,6 +137,9 @@ export default function WorkerDashboard() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (fieldName === 'profile_image') setProfileImageFile(file);
+      if (fieldName === 'cover_image') setCoverImageFile(file);
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setEditForm(prev => ({ ...prev, [fieldName]: reader.result as string }));

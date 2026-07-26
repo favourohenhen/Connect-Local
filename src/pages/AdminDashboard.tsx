@@ -45,29 +45,19 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchPendingWorkers = () => {
+  const fetchPendingWorkers = async () => {
     setLoading(true);
-    // Pull from localStorage
-    const localWorkers: PendingWorker[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
-    const pending = localWorkers.filter(w => w.status === 'unverified');
-
-    // Also attempt Supabase
-    supabase
+    const { data, error } = await supabase
       .from('workers')
       .select('*, profiles!workers_id_fkey(full_name)')
-      .eq('status', 'unverified')
-      .then(({ data }) => {
-        const dbPending = (data as unknown as PendingWorker[]) || [];
-        // Merge, dedup by id
-        const ids = new Set(pending.map(w => w.id));
-        const merged = [...pending, ...dbPending.filter(w => !ids.has(w.id))];
-        setWorkers(merged);
-        setLoading(false);
-      })
-      .catch(() => {
-        setWorkers(pending);
-        setLoading(false);
-      });
+      .eq('status', 'unverified');
+    
+    if (data && !error) {
+      setWorkers((data as unknown as PendingWorker[]) || []);
+    } else {
+      console.error('Failed to fetch pending workers:', error);
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -79,32 +69,28 @@ export default function AdminDashboard() {
     setTimeout(() => setActionMsg(''), 3000);
   };
 
-  const handleApprove = (workerId: string) => {
-    const localWorkers: PendingWorker[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
-    const updated = localWorkers.map(w => w.id === workerId ? { ...w, status: 'verified' } : w);
-    localStorage.setItem('local_workers', JSON.stringify(updated));
-
-    // Also try Supabase
-    supabase.from('workers').update({ status: 'verified' }).eq('id', workerId).then(() => {});
-
-    setWorkers(prev => prev.filter(w => w.id !== workerId));
-    setPreview(null);
-    flash('✅ Worker approved and is now visible in search.');
+  const handleApprove = async (workerId: string) => {
+    const { error } = await supabase.from('workers').update({ status: 'verified' }).eq('id', workerId);
+    if (!error) {
+      setWorkers(prev => prev.filter(w => w.id !== workerId));
+      setPreview(null);
+      flash('✅ Worker approved and is now visible in search.');
+    } else {
+      flash('❌ Error approving worker.');
+    }
   };
 
-  const handleReject = (workerId: string) => {
+  const handleReject = async (workerId: string) => {
     if (!window.confirm('Remove this worker from the platform? This cannot be undone.')) return;
 
-    const localWorkers: PendingWorker[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
-    const filtered = localWorkers.filter(w => w.id !== workerId);
-    localStorage.setItem('local_workers', JSON.stringify(filtered));
-
-    // Also try Supabase
-    supabase.from('workers').delete().eq('id', workerId).then(() => {});
-
-    setWorkers(prev => prev.filter(w => w.id !== workerId));
-    setPreview(null);
-    flash('❌ Worker has been removed from the platform.');
+    const { error } = await supabase.from('workers').delete().eq('id', workerId);
+    if (!error) {
+      setWorkers(prev => prev.filter(w => w.id !== workerId));
+      setPreview(null);
+      flash('❌ Worker has been removed from the platform.');
+    } else {
+      flash('❌ Error rejecting worker.');
+    }
   };
 
   // ── Admin Login Screen ──────────────────────────────────────────────────────

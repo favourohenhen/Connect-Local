@@ -30,10 +30,17 @@ export default function UserDashboard() {
   const [service, setService] = useState('');
   const [street, setStreet] = useState('');
 
-  // Retrieve user info from localStorage
-  const localUsers: any[] = JSON.parse(localStorage.getItem('local_users') || '[]');
-  const currentUser = localUsers.find(u => u.id === user?.id);
-  const displayName = currentUser?.full_name || 'Neighbour';
+  const [displayName, setDisplayName] = useState('Neighbour');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+        if (data && data.full_name) setDisplayName(data.full_name);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,13 +60,29 @@ export default function UserDashboard() {
   const [reviewDraft, setReviewDraft] = useState<Partial<LocalReview>>({ tags: [] });
   const [selectedWorkerForModal, setSelectedWorkerForModal] = useState<any>(null);
 
+  const fetchDashboardData = async () => {
+    if (!user) return;
+    
+    // Fetch Jobs
+    const { data: jobs } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+      
+    if (jobs) setMyJobs(jobs);
+
+    // Fetch Reviews
+    const { data: reviews } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('user_id', user.id);
+      
+    if (reviews) setMyReviews(reviews);
+  };
+
   useEffect(() => {
-    if (user) {
-      const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
-      setMyJobs(jobs.filter(j => j.user_id === user.id).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-      const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
-      setMyReviews(reviews.filter(r => r.user_id === user.id));
-    }
+    fetchDashboardData();
   }, [user]);
 
   useEffect(() => {
@@ -67,60 +90,54 @@ export default function UserDashboard() {
       if (myJobs.length === 0) return;
       const workerIds = [...new Set(myJobs.map(j => j.worker_id))];
       
-      const localWorkers: any[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
-      const details: Record<string, any> = {};
-      
       const { data } = await supabase
         .from('workers')
         .select('*, profiles!workers_id_fkey(full_name)')
         .in('id', workerIds);
         
+      const details: Record<string, any> = {};
       if (data) {
         data.forEach(w => {
-          details[w.id] = w;
+          details[w.id] = { ...w, profile_image: w.profile_image_url || w.profile_image };
         });
       }
-      
-      workerIds.forEach(id => {
-        if (!details[id]) {
-           const local = localWorkers.find(lw => lw.id === id) || DUMMY_WORKERS.find(dw => dw.id === id);
-           if (local) {
-             details[id] = local;
-           }
-        }
-      });
-      
       setWorkerDetails(details);
     };
     fetchWorkerDetails();
   }, [myJobs]);
 
-  const handleConfirmJob = (jobId: string, didComplete: boolean) => {
-    const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
-    const jobIdx = jobs.findIndex(j => j.id === jobId);
-    if (jobIdx !== -1) {
-      jobs[jobIdx].status = didComplete ? 'completed' : 'failed';
-      localStorage.setItem('local_jobs', JSON.stringify(jobs));
-      setMyJobs(jobs.filter(j => j.user_id === user?.id).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+  const handleConfirmJob = async (jobId: string, didComplete: boolean) => {
+    const newStatus = didComplete ? 'completed' : 'failed';
+    const { data, error } = await supabase
+      .from('jobs')
+      .update({ status: newStatus })
+      .eq('id', jobId)
+      .select()
+      .single();
+
+    if (data && !error) {
+      setMyJobs(prev => prev.map(j => j.id === jobId ? data : j).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
     }
   };
 
-  const handleSubmitReview = (finalDraft: Partial<LocalReview>) => {
+  const handleSubmitReview = async (finalDraft: Partial<LocalReview>) => {
     if (!user) return;
-    const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
-    const newReview: LocalReview = {
-      id: `rev-${Date.now()}`,
-      job_id: activeJobId,
-      user_id: user.id,
-      worker_id: activeWorkerId,
-      rating: finalDraft.rating as 5|3|1,
-      tags: finalDraft.tags || [],
-      would_rehire: finalDraft.would_rehire || false,
-      created_at: new Date().toISOString()
-    };
-    reviews.push(newReview);
-    localStorage.setItem('local_reviews', JSON.stringify(reviews));
-    setMyReviews([...myReviews, newReview]);
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert({
+        job_id: activeJobId,
+        user_id: user.id,
+        worker_id: activeWorkerId,
+        rating: finalDraft.rating,
+        tags: finalDraft.tags || [],
+        would_rehire: finalDraft.would_rehire || false
+      })
+      .select()
+      .single();
+
+    if (data && !error) {
+      setMyReviews(prev => [...prev, data]);
+    }
     setShowReviewModal(false);
   };
 

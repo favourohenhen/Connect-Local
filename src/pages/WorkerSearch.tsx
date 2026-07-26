@@ -43,184 +43,6 @@ export interface LocalReview {
   created_at: string;
 }
 
-export const DUMMY_WORKERS: WorkerSummary[] = [
-  {
-    id: 'dummy-1',
-    service_category: 'Plumber',
-    location_area: 'Urumwon',
-    street: 'Mechanic Road',
-    status: 'verified',
-    trust_score: 98,
-    is_available: true,
-    bio: 'Expert in pipe fixing, leakages, and full bathroom plumbing installations with over 10 years of local experience.',
-    profile_image: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=800&h=400&fit=crop',
-    recommended_by: 14,
-    contact_phone: '+2348000000001',
-    specialties: 'Pipe Repair, Installations, Leakage Detection',
-    profiles: { full_name: 'Osaze Ighodaro' }
-  },
-  {
-    id: 'dummy-2',
-    service_category: 'Electrician',
-    location_area: 'Urumwon',
-    street: 'Osakue Road',
-    status: 'verified',
-    trust_score: 95,
-    is_available: false,
-    bio: 'Professional house wiring, fault tracing, and generator repairs. Quick response guaranteed.',
-    profile_image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&h=400&fit=crop',
-    recommended_by: 22,
-    contact_phone: '+2348000000002',
-    specialties: 'House Wiring, Generator Repair, Fault Tracing',
-    profiles: { full_name: 'Nosa Edosa' }
-  },
-  {
-    id: 'dummy-3',
-    service_category: 'Barber / Hair Stylist',
-    location_area: 'Urumwon',
-    street: 'Opposite Urumwon Primary School',
-    status: 'verified',
-    trust_score: 99,
-    is_available: true,
-    bio: 'Clean fades, dreads locking, and general hair grooming. Home service available upon request.',
-    profile_image: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&h=400&fit=crop',
-    recommended_by: 45,
-    contact_phone: '+2348000000003',
-    specialties: 'Haircuts, Dreads, Grooming',
-    profiles: { full_name: 'Precious Haircuts' }
-  },
-  {
-    id: 'dummy-4',
-    service_category: 'Home Cleaning',
-    location_area: 'Urumwon',
-    street: 'Idada Street',
-    status: 'verified',
-    trust_score: 92,
-    is_available: true,
-    bio: 'Deep house cleaning, post-construction cleaning, and general sanitation. Affordable and thorough.',
-    profile_image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&h=400&fit=crop',
-    recommended_by: 18,
-    contact_phone: '+2348000000004',
-    specialties: 'Deep Cleaning, Sanitation, Post-Construction',
-    profiles: { full_name: 'Blessing Omoruyi' }
-  },
-  {
-    id: 'dummy-5',
-    service_category: 'Carpenter',
-    location_area: 'Urumwon',
-    street: 'Groundnut Junction',
-    status: 'verified',
-    trust_score: 94,
-    is_available: true,
-    bio: 'Roofing, furniture making, and repairs. Quality woodworks that last.',
-    profile_image: 'https://images.unsplash.com/photo-1534308143481-c55f00be8bd7?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=800&h=400&fit=crop',
-    recommended_by: 9,
-    contact_phone: '+2348000000005',
-    specialties: 'Roofing, Furniture, Woodwork',
-    profiles: { full_name: 'Friday Woodworks' }
-  },
-  {
-    id: 'dummy-6',
-    service_category: 'Phone & Tech Repair',
-    location_area: 'Urumwon',
-    street: 'Mechanic Road',
-    status: 'unverified',
-    trust_score: 85,
-    is_available: true,
-    bio: 'Screen replacement, charging ports, and software flashing for all iPhone and Android models.',
-    profile_image: 'https://images.unsplash.com/photo-1539331586018-346b53b2aaa4?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1597740985671-2a8a3b80502e?w=800&h=400&fit=crop',
-    recommended_by: 31,
-    contact_phone: '+2348000000006',
-    specialties: 'Screen Replacement, Software, Repairs',
-    profiles: { full_name: 'TechFix by Osas' }
-  },
-  {
-    id: 'dummy-7',
-    service_category: 'Laundry & Dry Cleaning',
-    location_area: 'Urumwon',
-    street: 'Osakue Road',
-    status: 'verified',
-    trust_score: 97,
-    is_available: true,
-    bio: 'Fast and reliable dry cleaning, ironing, and fabric care. Pick up and delivery available.',
-    profile_image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=800&h=400&fit=crop',
-    recommended_by: 28,
-    contact_phone: '+2348000000007',
-    specialties: 'Dry Cleaning, Ironing, Laundry',
-    profiles: { full_name: 'Edo Cleaners' }
-  },
-  {
-    id: 'dummy-8',
-    service_category: 'Borehole Installation',
-    location_area: 'Urumwon',
-    street: 'Groundnut Junction',
-    status: 'unverified',
-    trust_score: 85,
-    is_available: true,
-    bio: 'Professional borehole drilling, water treatment, and pump installations. We guarantee clean water for your home.',
-    profile_image: 'https://plus.unsplash.com/premium_photo-1664304298826-57235ff43624?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dw=400&h=400&fit=crop',
-    cover_image: 'https://plus.unsplash.com/premium_photo-1664304298826-57235ff43624?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dw=800&h=400&fit=crop',
-    recommended_by: 12,
-    contact_phone: '+2348000000008',
-    specialties: 'Borehole Drilling, Water Treatment, Plumbing',
-    profiles: { full_name: 'AquaTech Drilling' }
-  },
-  {
-    id: 'dummy-9',
-    service_category: 'Painting & Design',
-    location_area: 'Urumwon',
-    street: 'Mechanic Road',
-    status: 'verified',
-    trust_score: 98,
-    is_available: true,
-    bio: 'Interior and exterior painting, POP designs, and wallpaper installation to beautify your space.',
-    profile_image: 'https://images.unsplash.com/photo-1742900280864-bcc27353ceba?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800&h=400&fit=crop',
-    recommended_by: 25,
-    contact_phone: '+2348000000009',
-    specialties: 'Painting, POP Design, Wallpapers',
-    profiles: { full_name: 'ColorSplash Painters' }
-  },
-  {
-    id: 'dummy-10',
-    service_category: 'Tiles Installation',
-    location_area: 'Urumwon',
-    street: 'Opposite Urumwon Primary School',
-    status: 'unverified',
-    trust_score: 80,
-    is_available: true,
-    bio: 'Expert tiler for floors, walls, and bathrooms. Clean finishes and precise measurements.',
-    profile_image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&h=400&fit=crop',
-    recommended_by: 18,
-    contact_phone: '+2348000000010',
-    specialties: 'Floor Tiling, Wall Tiling, Interlocking',
-    profiles: { full_name: 'Precision Tiles & Co.' }
-  },
-  {
-    id: 'dummy-11',
-    service_category: 'Solar Panel Installation',
-    location_area: 'Urumwon',
-    street: 'Mechanic Road',
-    status: 'verified',
-    trust_score: 96,
-    is_available: true,
-    bio: 'Professional solar panel installation, inverter setups, and battery maintenance. 24/7 power guaranteed.',
-    profile_image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=400&fit=crop',
-    cover_image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=800&h=400&fit=crop',
-    recommended_by: 32,
-    contact_phone: '+2348000000011',
-    specialties: 'Solar Panels, Inverters, Battery Setup',
-    profiles: { full_name: 'SunPower Energy Solutions' }
-  }
-];
 
 export default function WorkerSearch() {
   const [workers, setWorkers] = useState<WorkerSummary[]>([]);
@@ -243,95 +65,121 @@ export default function WorkerSearch() {
   // Job & Review State
   const [currentJob, setCurrentJob] = useState<LocalJob | null>(null);
   const [currentReview, setCurrentReview] = useState<LocalReview | null>(null);
+  const [allReviews, setAllReviews] = useState<LocalReview[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewDraft, setReviewDraft] = useState<Partial<LocalReview>>({ tags: [] });
   const [reviewStep, setReviewStep] = useState(1);
 
   // Load active job and review when worker is selected
   useEffect(() => {
-    if (selectedWorker && user) {
-      const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
-      const myJob = jobs.find(j => j.user_id === user.id && j.worker_id === selectedWorker.id);
-      setCurrentJob(myJob || null);
-      if (myJob) {
-        const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
-        const myReview = reviews.find(r => r.job_id === myJob.id);
-        setCurrentReview(myReview || null);
+    async function loadJobAndReview() {
+      if (selectedWorker && user) {
+        const { data: jobs } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('worker_id', selectedWorker.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (jobs && jobs.length > 0) {
+          setCurrentJob(jobs[0]);
+          const { data: reviews } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('job_id', jobs[0].id)
+            .single();
+          setCurrentReview(reviews || null);
+        } else {
+          setCurrentJob(null);
+          setCurrentReview(null);
+        }
       } else {
+        setCurrentJob(null);
         setCurrentReview(null);
       }
-    } else {
-      setCurrentJob(null);
-      setCurrentReview(null);
     }
+    loadJobAndReview();
   }, [selectedWorker, user]);
 
-  const handleCallClick = (phone?: string, workerId?: string) => {
+  const handleCallClick = async (phone?: string, workerId?: string) => {
     if (phone) {
       navigator.clipboard.writeText(phone);
       setCopiedPhone(true);
       setTimeout(() => setCopiedPhone(false), 2000);
       
-      // Create Job if not exists and user is logged in
       if (user && workerId && !currentJob) {
         // Rate limiting check
-        const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
-        const myRecentJobs = jobs.filter(j => j.user_id === user.id && (Date.now() - new Date(j.created_at).getTime() < 3600000));
-        if (myRecentJobs.length >= 3) {
+        const { data: recentJobs } = await supabase
+          .from('jobs')
+          .select('id')
+          .eq('user_id', user.id)
+          .gte('created_at', new Date(Date.now() - 3600000).toISOString());
+          
+        if (recentJobs && recentJobs.length >= 3) {
           alert("You've contacted too many workers recently. Please wait before contacting more.");
           return;
         }
 
-        const newJob: LocalJob = {
-          id: `job-${Date.now()}`,
-          user_id: user.id,
-          worker_id: workerId,
-          status: 'pending',
-          created_at: new Date().toISOString()
-        };
-        jobs.push(newJob);
-        localStorage.setItem('local_jobs', JSON.stringify(jobs));
-        setCurrentJob(newJob);
+        const { data, error } = await supabase
+          .from('jobs')
+          .insert({
+            user_id: user.id,
+            worker_id: workerId,
+            status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (data && !error) {
+          setCurrentJob(data);
+        }
       } else if (!user) {
         setShowLoginPrompt(true);
       }
     }
   };
 
-  const handleConfirmJob = (didComplete: boolean) => {
+  const handleConfirmJob = async (didComplete: boolean) => {
     if (!currentJob) return;
-    const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
-    const jobIdx = jobs.findIndex(j => j.id === currentJob.id);
-    if (jobIdx !== -1) {
-      jobs[jobIdx].status = didComplete ? 'completed' : 'failed';
-      localStorage.setItem('local_jobs', JSON.stringify(jobs));
-      setCurrentJob(jobs[jobIdx]);
+    const newStatus = didComplete ? 'completed' : 'failed';
+    const { data, error } = await supabase
+      .from('jobs')
+      .update({ status: newStatus })
+      .eq('id', currentJob.id)
+      .select()
+      .single();
+
+    if (data && !error) {
+      setCurrentJob(data);
     }
   };
 
-  const handleSubmitReview = (finalDraft: Partial<LocalReview>) => {
+  const handleSubmitReview = async (finalDraft: Partial<LocalReview>) => {
     if (!currentJob || !user || !selectedWorker) return;
-    const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
-    const newReview: LocalReview = {
-      id: `rev-${Date.now()}`,
-      job_id: currentJob.id,
-      user_id: user.id,
-      worker_id: selectedWorker.id,
-      rating: finalDraft.rating as 5|3|1,
-      tags: finalDraft.tags || [],
-      would_rehire: finalDraft.would_rehire || false,
-      created_at: new Date().toISOString()
-    };
-    reviews.push(newReview);
-    localStorage.setItem('local_reviews', JSON.stringify(reviews));
-    setCurrentReview(newReview);
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert({
+        job_id: currentJob.id,
+        user_id: user.id,
+        worker_id: selectedWorker.id,
+        rating: finalDraft.rating,
+        tags: finalDraft.tags || [],
+        would_rehire: finalDraft.would_rehire || false
+      })
+      .select()
+      .single();
+
+    if (data && !error) {
+      setCurrentReview(data);
+      setAllReviews([...allReviews, data]);
+    }
     setShowReviewModal(false);
   };
 
   const getWorkerStats = (workerId: string) => {
-    const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
-    const workerReviews = reviews.filter(r => r.worker_id === workerId);
-    const w = workers.find(w => w.id === workerId) || DUMMY_WORKERS.find(d => d.id === workerId);
+    const workerReviews = allReviews.filter(r => r.worker_id === workerId);
+    const w = workers.find(w => w.id === workerId);
     
     if (workerReviews.length === 0) {
        return { 
@@ -353,8 +201,7 @@ export default function WorkerSearch() {
       else bad++;
       
       if (r.would_rehire) recommends++;
-      
-      r.tags.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+      r.tags?.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
     });
     
     const tags = Object.entries(tagCounts).sort((a,b) => b[1] - a[1]).map(e => e[0]);
@@ -386,25 +233,21 @@ export default function WorkerSearch() {
   const fetchWorkers = async (serviceTerm = '', streetTerm = '') => {
     setLoading(true);
     try {
-      let query = supabase.from('workers').select('id, service_category, location_area, status, trust_score, is_available, created_at, profiles!workers_id_fkey(full_name)');
+      let query = supabase.from('workers').select('id, service_category, location_area, street, status, trust_score, is_available, created_at, bio, profile_image_url, cover_image, recommended_by, contact_phone, specialties, profiles!workers_id_fkey(full_name)');
 
       if (serviceTerm) {
         query = query.ilike('service_category', `%${serviceTerm}%`);
       }
       if (streetTerm) {
-        query = query.ilike('location_area', `%${streetTerm}%`);
+        query = query.or(`location_area.ilike.%${streetTerm}%,street.ilike.%${streetTerm}%`);
       }
 
-      const { data, error } = await query;
-      if (error && error.code !== '42P01') console.warn('Supabase fetch error:', error);
+      const [{ data: workersData }, { data: reviewsData }] = await Promise.all([
+        query,
+        supabase.from('reviews').select('*')
+      ]);
 
-      let filteredDummies = DUMMY_WORKERS;
-      if (serviceTerm) {
-        filteredDummies = filteredDummies.filter(w => w.service_category.toLowerCase().includes(serviceTerm.toLowerCase()));
-      }
-      if (streetTerm) {
-        filteredDummies = filteredDummies.filter(w => w.street?.toLowerCase().includes(streetTerm.toLowerCase()));
-      }
+      if (reviewsData) setAllReviews(reviewsData);
 
       const isProfileComplete = (worker: any) => {
         let count = 0;
@@ -413,31 +256,21 @@ export default function WorkerSearch() {
         if (worker.contact_phone) count++;
         if (worker.street || worker.location_area) count++;
         if (worker.bio) count++;
-        if (worker.profile_image || worker.profile_image_url) count++;
+        if (worker.profile_image_url || worker.profile_image) count++; // Handle Supabase standard fields
         if (worker.cover_image) count++;
         return count === 7;
       };
 
-      const dbWorkers = (data as unknown as WorkerSummary[]) || [];
-      const completeDbWorkers = dbWorkers.filter(isProfileComplete);
+      const dbWorkers = (workersData as any[]) || [];
+      const completeDbWorkers = dbWorkers.map(w => ({
+        ...w,
+        profile_image: w.profile_image_url // normalize image field
+      })).filter(isProfileComplete);
 
-      let localWorkers: WorkerSummary[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
-      localWorkers = localWorkers.filter(isProfileComplete);
-
-      if (serviceTerm) {
-        localWorkers = localWorkers.filter(w => w.service_category.toLowerCase().includes(serviceTerm.toLowerCase()));
-      }
-      if (streetTerm) {
-        localWorkers = localWorkers.filter(w =>
-          w.street?.toLowerCase().includes(streetTerm.toLowerCase()) ||
-          w.location_area?.toLowerCase().includes(streetTerm.toLowerCase())
-        );
-      }
-
-      setWorkers([...localWorkers, ...completeDbWorkers, ...filteredDummies.filter(isProfileComplete)]);
+      setWorkers(completeDbWorkers);
     } catch (err) {
       console.error(err);
-      setWorkers(DUMMY_WORKERS);
+      setWorkers([]);
     } finally {
       setLoading(false);
     }
