@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { Eye, EyeOff, Upload, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Camera, MapPin, Briefcase, Phone, User, FileText, CheckCircle2, ShieldCheck, Upload, ArrowLeft } from 'lucide-react';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -36,9 +36,22 @@ export default function Signup() {
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [nin, setNin] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const generatePassword = () => {
+    const words = ['Lion', 'Blue', 'Fast', 'Tree', 'Moon', 'Gold', 'Star', 'Safe'];
+    const word = words[Math.floor(Math.random() * words.length)];
+    const num = Math.floor(100 + Math.random() * 900);
+    const pass = `${word}${num}!`;
+    setFormData(prev => ({ ...prev, password: pass }));
+    setShowPassword(true);
+  };
+
+  const isStrongPassword = (pw: string) => {
+    return /^(?=.*[A-Za-z])(?=.*\d)[\x20-\x7E]{8,}$/.test(pw);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
@@ -53,8 +66,9 @@ export default function Signup() {
       setError('Please fill in all required fields.');
       return;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    
+    if (!isStrongPassword(formData.password)) {
+      setError('Password must be at least 8 characters, contain letters and numbers.');
       return;
     }
     setStep(2);
@@ -72,7 +86,6 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // Derive placeholder email from phone number for Supabase auth
       const placeholderEmail = `${formData.phone.replace(/\s+/g, '')}@connectlocal.app`;
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -83,7 +96,6 @@ export default function Signup() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Instead of DB insert, store in localStorage (local JSON)
         const finalService = formData.serviceCategory === 'Other' ? formData.otherService : formData.serviceCategory;
         const newWorker = {
           id: authData.user?.id || `local-${Date.now()}`,
@@ -107,7 +119,6 @@ export default function Signup() {
         existingWorkers.push(newWorker);
         localStorage.setItem('local_workers', JSON.stringify(existingWorkers));
 
-        // Immediately update local auth store so routing doesn't blank out
         setUser(authData.user);
         setRole('worker');
 
@@ -145,13 +156,26 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Password *</label>
+                <div className="flex justify-between items-end mb-2">
+                  <label className="block text-sm font-bold text-gray-700">Password *</label>
+                  <button 
+                    type="button" 
+                    onClick={generatePassword}
+                    className="text-xs text-primary hover:text-primary-dark font-bold"
+                  >
+                    Suggest strong password
+                  </button>
+                </div>
                 <div className="relative">
-                  <input type={showPassword ? "text" : "password"} name="password" required value={formData.password} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-gray-50 pr-12" placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                  <input type={showPassword ? "text" : "password"} name="password" required value={formData.password} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-gray-50 pr-12" placeholder="At least 8 chars, letters & numbers" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                <p className="text-[11px] text-gray-500 mt-1.5 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-green-600" />
+                  You'll stay logged in securely until you manually log out.
+                </p>
               </div>
 
               <div className="md:col-span-2">

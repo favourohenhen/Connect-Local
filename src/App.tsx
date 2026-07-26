@@ -12,6 +12,8 @@ import WorkerSearch from './pages/WorkerSearch';
 import WorkerProfile from './pages/WorkerProfile';
 import UserLogin from './pages/UserLogin';
 import UserSignup from './pages/UserSignup';
+import UserDashboard from './pages/UserDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const { user, role, setUser, setRole } = useAuthStore();
@@ -65,8 +67,10 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
-      <Route path="/search" element={<WorkerSearch />} />
-      <Route path="/worker/:id" element={<WorkerProfile />} />
+      
+      {/* Protected Search & Profiles (Must be logged in as either worker or community user) */}
+      <Route path="/search" element={user ? <WorkerSearch /> : <Navigate to="/user/login" replace />} />
+      <Route path="/worker/:id" element={user ? <WorkerProfile /> : <Navigate to="/user/login" replace />} />
       
       {/* Auth Routes */}
       <Route path="/login" element={
@@ -95,6 +99,15 @@ function App() {
       {/* Community User Auth Routes */}
       <Route path="/user/login" element={!user ? <UserLogin /> : <Navigate to="/user/dashboard" replace />} />
       <Route path="/user/signup" element={!user ? <UserSignup /> : <Navigate to="/user/dashboard" replace />} />
+
+      {/* Community User Protected Route */}
+      <Route
+        path="/user/dashboard"
+        element={user ? <UserDashboard /> : <Navigate to="/user/login" replace />}
+      />
+
+      {/* Admin Route */}
+      <Route path="/admin" element={<AdminDashboard />} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />

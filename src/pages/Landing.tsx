@@ -1,11 +1,20 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, LogOut } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
+import { supabase } from '../lib/supabase';
 
 export default function Landing() {
   const navigate = useNavigate();
   const [service, setService] = React.useState('');
   const [street, setStreet] = React.useState('');
+  const { user, role, signOut } = useAuthStore();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    signOut();
+    navigate('/');
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,17 +40,51 @@ export default function Landing() {
       {/* Navbar */}
       <header className="container mx-auto px-4 py-4 flex justify-between items-center z-50 relative">
         <Link to="/" className="text-2xl font-bold text-primary tracking-tight">Connect Local</Link>
+
+        {/* Desktop Nav */}
         <div className="hidden md:flex gap-6 items-center">
           <Link to="/search" className="text-base font-medium transition-colors hover:text-primary">Find a Pro</Link>
-          <Link to="/login" className="text-base font-medium transition-colors hover:text-primary">Login</Link>
-          <Link to="/signup" className="bg-white text-primary border-2 border-primary px-5 py-2 rounded-full font-semibold hover:bg-gray-50 transition-colors">
-            Offer Your Service
-          </Link>
+          {user ? (
+            <>
+              <Link
+                to={role === 'worker' ? '/dashboard' : '/user/dashboard'}
+                className="text-base font-medium transition-colors hover:text-primary"
+              >
+                My Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-base font-medium text-red-500 hover:text-red-700 transition-colors"
+              >
+                <LogOut className="w-4 h-4" /> Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/user/login" className="text-base font-medium transition-colors hover:text-primary">Login</Link>
+              <Link to="/signup" className="bg-white text-primary border-2 border-primary px-5 py-2 rounded-full font-semibold hover:bg-gray-50 transition-colors">
+                Offer Your Service
+              </Link>
+            </>
+          )}
         </div>
-        {/* Mobile menu simple fallback */}
+
+        {/* Mobile Nav */}
         <div className="md:hidden flex gap-4 items-center">
           <Link to="/search" className="text-primary font-medium text-sm">Find a Pro</Link>
-          <Link to="/signup" className="text-primary font-medium text-sm">Join as Pro</Link>
+          {user ? (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-red-500 font-medium text-sm"
+            >
+              <LogOut className="w-4 h-4" /> Logout
+            </button>
+          ) : (
+            <>
+              <Link to="/user/login" className="text-primary font-medium text-sm">Login</Link>
+              <Link to="/signup" className="text-primary font-medium text-sm">Join as Pro</Link>
+            </>
+          )}
         </div>
       </header>
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { Eye, EyeOff, ArrowLeft, Phone, User, MapPin } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Phone, User, MapPin, ShieldCheck } from 'lucide-react';
 
 export default function UserSignup() {
   const navigate = useNavigate();
@@ -24,6 +24,20 @@ export default function UserSignup() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const generatePassword = () => {
+    const words = ['Lion', 'Blue', 'Fast', 'Tree', 'Moon', 'Gold', 'Star', 'Safe'];
+    const word = words[Math.floor(Math.random() * words.length)];
+    const num = Math.floor(100 + Math.random() * 900);
+    const pass = `${word}${num}!`;
+    setFormData(prev => ({ ...prev, password: pass }));
+    setShowPassword(true);
+  };
+
+  const isStrongPassword = (pw: string) => {
+    // Requires at least 8 chars, 1 letter, 1 number, and only printable ASCII (no emojis)
+    return /^(?=.*[A-Za-z])(?=.*\d)[\x20-\x7E]{8,}$/.test(pw);
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -32,8 +46,9 @@ export default function UserSignup() {
       setError('Please fill in all required fields.');
       return;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    
+    if (!isStrongPassword(formData.password)) {
+      setError('Password must be at least 8 characters, contain letters and numbers, and cannot include emojis.');
       return;
     }
 
@@ -154,7 +169,16 @@ export default function UserSignup() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+            <div className="flex justify-between items-end mb-2">
+              <label className="block text-sm font-medium text-gray-700">Password *</label>
+              <button 
+                type="button" 
+                onClick={generatePassword}
+                className="text-xs text-primary hover:text-primary-dark font-medium"
+              >
+                Suggest strong password
+              </button>
+            </div>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -163,7 +187,7 @@ export default function UserSignup() {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-12"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 chars, letters & numbers"
               />
               <button
                 type="button"
@@ -173,6 +197,10 @@ export default function UserSignup() {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            <p className="text-[11px] text-gray-500 mt-1.5 flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-green-600" />
+              You'll stay logged in securely until you manually log out.
+            </p>
           </div>
 
           <button

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Link, useLocation } from 'react-router-dom';
-import { Search, MapPin, ArrowLeft, Phone, Star, ShieldCheck } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, MapPin, ArrowLeft, Phone, Star, ShieldCheck, ThumbsUp } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface WorkerSummary {
   id: string;
@@ -206,6 +207,10 @@ export default function WorkerSearch() {
   const [workers, setWorkers] = useState<WorkerSummary[]>([]);
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+  const { role } = useAuthStore();
+  const isCustomer = role === 'customer';
+  const homeLink = isCustomer ? '/user/dashboard' : '/';
+  const navigate = useNavigate();
 
   const [searchService, setSearchService] = useState(params.get('service') || '');
   const [searchStreet, setSearchStreet] = useState(params.get('street') || '');
@@ -214,6 +219,8 @@ export default function WorkerSearch() {
   // Modal State
   const [selectedWorker, setSelectedWorker] = useState<WorkerSummary | null>(null);
   const [copiedPhone, setCopiedPhone] = useState(false);
+  const [recommendedIds, setRecommendedIds] = useState<Set<string>>(new Set());
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const handleCallClick = (phone?: string) => {
     if (phone) {
@@ -221,6 +228,27 @@ export default function WorkerSearch() {
       setCopiedPhone(true);
       setTimeout(() => setCopiedPhone(false), 2000);
     }
+  };
+
+  const handleRecommend = (worker: WorkerSummary) => {
+    if (!role) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    if (recommendedIds.has(worker.id)) return;
+
+    // Increment locally
+    const localWorkers: any[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
+    const idx = localWorkers.findIndex(w => w.id === worker.id);
+    if (idx !== -1) {
+      localWorkers[idx].recommended_by = (localWorkers[idx].recommended_by || 0) + 1;
+      localStorage.setItem('local_workers', JSON.stringify(localWorkers));
+    }
+    // Also try Supabase
+    supabase.from('workers').update({ recommended_by: (worker.recommended_by || 0) + 1 }).eq('id', worker.id).then(() => {});
+
+    setSelectedWorker(prev => prev ? { ...prev, recommended_by: (prev.recommended_by || 0) + 1 } : prev);
+    setRecommendedIds(prev => new Set(prev).add(worker.id));
   };
 
   useEffect(() => {
@@ -317,14 +345,16 @@ export default function WorkerSearch() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <header className="bg-white shadow-sm py-4 px-4 md:px-6 flex justify-between items-center sticky top-0 z-40">
         <div className="flex items-center gap-4">
-          <Link to="/" className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+          <Link to={homeLink} className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <Link to="/" className="text-xl font-bold text-primary hidden sm:block">Connect Local</Link>
+          <Link to={homeLink} className="text-xl font-bold text-primary hidden sm:block">Connect Local</Link>
         </div>
-        <Link to="/login" className="text-primary font-medium text-sm border border-primary px-4 py-1.5 rounded-full hover:bg-blue-50 transition-colors">
-          Worker Login
-        </Link>
+        {!isCustomer && (
+          <Link to="/login" className="text-primary font-medium text-sm border border-primary px-4 py-1.5 rounded-full hover:bg-blue-50 transition-colors">
+            Worker Login
+          </Link>
+        )}
       </header>
 
       <div className="flex-1 p-4 w-full max-w-6xl mx-auto">
@@ -503,7 +533,7 @@ export default function WorkerSearch() {
                     </p>
                   </div>
 
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex gap-4 mb-4">
                     <div className="bg-gray-50 flex-1 p-3 rounded-xl border border-gray-100 text-center">
                       <div className="h-8 flex justify-center items-center">
                         {selectedWorker.status === 'verified' ? <ShieldCheck className="w-6 h-6 text-green-500" /> : <span className="text-gray-400 font-bold">---</span>}
@@ -520,6 +550,40 @@ export default function WorkerSearch() {
                       <div className="text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommendations</div>
                     </div>
                   </div>
+
+                  {/* Recommend Button */}
+                  {showLoginPrompt ? (
+                    <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                      <p className="text-amber-800 font-medium text-sm mb-3">Log in to recommend this worker</p>
+                      <div className="flex gap-2 justify-center">
+                        <button
+                          onClick={() => { setShowLoginPrompt(false); navigate('/user/login'); }}
+                          className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-full"
+                        >
+                          Login
+                        </button>
+                        <button
+                          onClick={() => setShowLoginPrompt(false)}
+                          className="bg-gray-100 text-gray-600 text-sm font-medium px-4 py-2 rounded-full"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleRecommend(selectedWorker)}
+                      disabled={recommendedIds.has(selectedWorker.id)}
+                      className={`w-full flex items-center justify-center gap-2 mb-6 py-3 rounded-xl font-semibold text-sm transition-all ${
+                        recommendedIds.has(selectedWorker.id)
+                          ? 'bg-green-50 text-green-700 border border-green-200 cursor-default'
+                          : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
+                      }`}
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                      {recommendedIds.has(selectedWorker.id) ? 'Recommended! ✓' : 'Add Recommendation'}
+                    </button>
+                  )}
 
                   <div className="mb-8">
                     <h3 className="font-bold text-gray-900 mb-2">About</h3>
