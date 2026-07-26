@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { Eye, EyeOff, ArrowLeft, Phone } from 'lucide-react';
 
-export default function Login() {
+export default function UserLogin() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +19,6 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    // Construct placeholder email from phone number
     const placeholderEmail = `${phone.replace(/\s+/g, '')}@connectlocal.app`;
 
     try {
@@ -39,12 +38,20 @@ export default function Login() {
 
         if (profileError) {
           console.error('Failed to fetch profile:', profileError);
+          // Fallback: check localStorage for community user
+          const localUsers: any[] = JSON.parse(localStorage.getItem('local_users') || '[]');
+          const found = localUsers.find(u => u.id === authData.user!.id);
+          if (found) {
+            setRole('customer');
+          } else {
+            setRole('customer');
+          }
         } else if (profileData) {
           setRole(profileData.role);
-          setUser(authData.user);
         }
 
-        navigate('/dashboard');
+        setUser(authData.user);
+        navigate('/user/dashboard');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid phone number or password.');
@@ -60,8 +67,8 @@ export default function Login() {
       </Link>
 
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 mt-10 sm:mt-0">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Welcome Back, Pro</h2>
-        <p className="text-center text-gray-500 mb-8 text-sm">Log in with your phone number and password</p>
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Welcome Back, Neighbour</h2>
+        <p className="text-center text-gray-500 mb-8 text-sm">Log in to your community account</p>
 
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm">
@@ -117,14 +124,14 @@ export default function Login() {
 
         <p className="text-center mt-6 text-gray-600 text-sm">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-primary font-medium hover:underline">
-            Sign up as a Worker
+          <Link to="/user/signup" className="text-primary font-medium hover:underline">
+            Sign up here
           </Link>
         </p>
         <p className="text-center mt-3 text-gray-600 text-sm">
-          Are you a community member?{' '}
-          <Link to="/user/login" className="text-primary font-medium hover:underline">
-            Login here
+          Are you a service professional?{' '}
+          <Link to="/login" className="text-primary font-medium hover:underline">
+            Worker login
           </Link>
         </p>
       </div>

@@ -18,7 +18,6 @@ export default function Signup() {
   // Form Data
   const [formData, setFormData] = useState({
     fullName: '',
-    email: '',
     password: '',
     businessName: '',
     street: '',
@@ -50,7 +49,7 @@ export default function Signup() {
 
   const handleNext = () => {
     setError('');
-    if (!formData.fullName || !formData.email || !formData.password || !formData.street || !formData.phone || !formData.bio) {
+    if (!formData.fullName || !formData.phone || !formData.password || !formData.street || !formData.bio) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -73,8 +72,11 @@ export default function Signup() {
     setLoading(true);
 
     try {
+      // Derive placeholder email from phone number for Supabase auth
+      const placeholderEmail = `${formData.phone.replace(/\s+/g, '')}@connectlocal.app`;
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: placeholderEmail,
         password: formData.password,
       });
 
@@ -140,11 +142,6 @@ export default function Signup() {
               <div className="md:col-span-2">
                 <label className="block text-sm font-bold text-gray-700 mb-2">Full Name *</label>
                 <input type="text" name="fullName" required value={formData.fullName} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-gray-50" placeholder="John Doe" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Email Address *</label>
-                <input type="email" name="email" required value={formData.email} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-gray-50" placeholder="test@dummy.com" />
               </div>
 
               <div>
@@ -243,9 +240,9 @@ export default function Signup() {
                   </div>
                 </div>
 
-                {/* Cover Image */}
+                {/* Images of Previous Work */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Cover Image *</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Images of Previous Work *</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:bg-gray-50 transition-colors relative h-40 flex flex-col items-center justify-center overflow-hidden">
                     {coverImage ? (
                       <img src={coverImage} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />

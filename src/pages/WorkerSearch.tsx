@@ -59,8 +59,8 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-3',
     service_category: 'Barber / Hair Stylist',
-    location_area: 'Urhumwon',
-    street: ' Opppostie Urhumwon Primary School',
+    location_area: 'Urumwon',
+    street: 'Opposite Urumwon Primary School',
     status: 'verified',
     trust_score: 99,
     is_available: true,
@@ -171,8 +171,8 @@ const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-10',
     service_category: 'Tiles Installation',
-    location_area: 'Urhumwon',
-    street: 'Opposite Urhumwon Primary School',
+    location_area: 'Urumwon',
+    street: 'Opposite Urumwon Primary School',
     status: 'unverified',
     trust_score: 80,
     is_available: true,
@@ -352,7 +352,7 @@ export default function WorkerSearch() {
             <datalist id="street-options">
               <option value="Mechanic Road" />
               <option value="Osakue Road" />
-              <option value="Urhumwon Primary School" />
+              <option value="Opposite Urumwon Primary School" />
               <option value="Idada Street" />
               <option value="Groundnut Junction" />
             </datalist>
@@ -411,7 +411,7 @@ export default function WorkerSearch() {
                   </div>
 
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">
-                    {worker.bio || 'Professional service provider in Urhumwon.'}
+                    {worker.bio || 'Professional service provider in Urumwon.'}
                   </p>
 
                   {worker.specialties && (

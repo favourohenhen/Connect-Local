@@ -10,6 +10,8 @@ import Landing from './pages/Landing';
 import WorkerDashboard from './pages/WorkerDashboard';
 import WorkerSearch from './pages/WorkerSearch';
 import WorkerProfile from './pages/WorkerProfile';
+import UserLogin from './pages/UserLogin';
+import UserSignup from './pages/UserSignup';
 
 function App() {
   const { user, role, setUser, setRole } = useAuthStore();
@@ -90,6 +92,10 @@ function App() {
         element={user && role === 'worker' ? <WorkerDashboard /> : <Navigate to="/login" replace />} 
       />
       
+      {/* Community User Auth Routes */}
+      <Route path="/user/login" element={!user ? <UserLogin /> : <Navigate to="/user/dashboard" replace />} />
+      <Route path="/user/signup" element={!user ? <UserSignup /> : <Navigate to="/user/dashboard" replace />} />
+
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

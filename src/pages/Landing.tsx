@@ -22,8 +22,8 @@ export default function Landing() {
     { name: 'Barber / Hair Stylist', img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
     { name: 'Laundry & Dry Cleaning', img: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
     { name: 'Carpenter', img: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-    { name: 'Phone & Tech Repair', img: 'https://images.unsplash.com/photo-1539331586018-346b53b2aaa4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-    { name: 'Painting & Design', img: 'https://images.unsplash.com/photo-1742900280864-bcc27353ceba?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
+    { name: 'Phone & Tech Repair', img: 'https://images.unsplash.com/photo-1598327105854-c8674faddf79?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
+    { name: 'Painting & Design', img: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
   ];
 
   return (
