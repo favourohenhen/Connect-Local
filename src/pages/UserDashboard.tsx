@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { Search, MapPin, LogOut, Star, ArrowRight, CheckCircle2, XCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Search, MapPin, LogOut, Star, ArrowRight, CheckCircle2, XCircle, ThumbsUp, ThumbsDown, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { DUMMY_WORKERS } from './WorkerSearch';
 
 export interface LocalJob {
   id: string;
@@ -44,11 +45,13 @@ export default function UserDashboard() {
 
   const [myJobs, setMyJobs] = useState<LocalJob[]>([]);
   const [myReviews, setMyReviews] = useState<LocalReview[]>([]);
+  const [workerDetails, setWorkerDetails] = useState<Record<string, any>>({});
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [activeJobId, setActiveJobId] = useState('');
   const [activeWorkerId, setActiveWorkerId] = useState('');
   const [reviewStep, setReviewStep] = useState(1);
   const [reviewDraft, setReviewDraft] = useState<Partial<LocalReview>>({ tags: [] });
+  const [selectedWorkerForModal, setSelectedWorkerForModal] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -58,6 +61,39 @@ export default function UserDashboard() {
       setMyReviews(reviews.filter(r => r.user_id === user.id));
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchWorkerDetails = async () => {
+      if (myJobs.length === 0) return;
+      const workerIds = [...new Set(myJobs.map(j => j.worker_id))];
+      
+      const localWorkers: any[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
+      const details: Record<string, any> = {};
+      
+      const { data } = await supabase
+        .from('workers')
+        .select('*, profiles!workers_id_fkey(full_name)')
+        .in('id', workerIds);
+        
+      if (data) {
+        data.forEach(w => {
+          details[w.id] = w;
+        });
+      }
+      
+      workerIds.forEach(id => {
+        if (!details[id]) {
+           const local = localWorkers.find(lw => lw.id === id) || DUMMY_WORKERS.find(dw => dw.id === id);
+           if (local) {
+             details[id] = local;
+           }
+        }
+      });
+      
+      setWorkerDetails(details);
+    };
+    fetchWorkerDetails();
+  }, [myJobs]);
 
   const handleConfirmJob = (jobId: string, didComplete: boolean) => {
     const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
@@ -181,19 +217,31 @@ export default function UserDashboard() {
               <div className="space-y-4">
                 {myJobs.map(job => {
                   const hasReview = myReviews.some(r => r.job_id === job.id);
+                  const workerInfo = workerDetails[job.worker_id];
+                  const fullName = workerInfo?.profiles?.full_name || 'Service Pro';
+                  const service = workerInfo?.service_category || 'Local Worker';
+                  const avatarUrl = workerInfo?.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${fullName}`;
+
                   return (
-                    <div key={job.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">{new Date(job.created_at).toLocaleDateString()}</p>
-                          <h4 className="font-bold text-gray-900">Job Reference: {job.id.slice(-6)}</h4>
+                    <div key={job.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm transition-all hover:shadow-md">
+                      <div 
+                        className="flex items-center gap-4 mb-4 cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded-xl transition-colors"
+                        onClick={() => setSelectedWorkerForModal(workerInfo)}
+                      >
+                        <img src={avatarUrl} alt={fullName} className="w-12 h-12 rounded-full border-2 border-gray-100 object-cover shrink-0 bg-white" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 leading-tight truncate">{fullName}</h4>
+                          <p className="text-xs text-gray-500 mt-1 truncate">{service}</p>
                         </div>
-                        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${
-                          job.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          job.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {job.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${
+                            job.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            job.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {job.status}
+                          </span>
+                          <span className="text-[10px] text-gray-400">{new Date(job.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
                       
                       {job.status === 'pending' && (
@@ -321,6 +369,137 @@ export default function UserDashboard() {
             </div>
             {/* Close Button */}
             <button onClick={() => setShowReviewModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"><XCircle className="w-6 h-6"/></button>
+          </div>
+        </div>
+      )}
+
+      {/* Worker Details Modal Overlay */}
+      {selectedWorkerForModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedWorkerForModal(null)}>
+          <div
+            className="w-full sm:max-w-md flex flex-col max-h-[90vh] animate-in slide-in-from-bottom sm:zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative w-full rounded-t-3xl sm:rounded-3xl overflow-hidden bg-white shadow-2xl flex flex-col">
+              <div className="absolute top-0 left-0 right-0 h-48 shrink-0">
+                <img src={selectedWorkerForModal.cover_image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=800&fit=crop'} alt="Cover" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/20" />
+                <button
+                  onClick={() => setSelectedWorkerForModal(null)}
+                  className="absolute top-4 left-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-md transition-colors z-10"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="relative pt-32 px-4 pb-4 flex-1 overflow-y-auto">
+                <div className="bg-white rounded-2xl shadow-lg p-6 relative">
+                  <div className="absolute -top-12 left-6">
+                    <img
+                      src={selectedWorkerForModal.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${selectedWorkerForModal.profiles?.full_name}`}
+                      alt={selectedWorkerForModal.profiles?.full_name}
+                      className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-md bg-white"
+                    />
+                  </div>
+
+                  <div className="mb-6 pt-12">
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      {selectedWorkerForModal.profiles?.full_name}
+                      {selectedWorkerForModal.status === 'verified' && <ShieldCheck className="w-6 h-6 text-blue-500" />}
+                    </h2>
+                    <p className="text-primary font-medium text-lg">{selectedWorkerForModal.service_category}</p>
+                    <p className="text-gray-500 flex items-center gap-1 mt-1">
+                      <MapPin className="w-4 h-4" /> {selectedWorkerForModal.street || selectedWorkerForModal.location_area || 'Urumwon'}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4 mb-4">
+                    <div className="bg-gray-50 flex-1 p-3 rounded-xl border border-gray-100 text-center">
+                      <div className="h-8 flex justify-center items-center">
+                        {selectedWorkerForModal.status === 'verified' ? <ShieldCheck className="w-6 h-6 text-green-500" /> : <span className="text-gray-400 font-bold">---</span>}
+                      </div>
+                      <div className="text-xs text-gray-500 uppercase font-bold tracking-wide mt-1">
+                        {selectedWorkerForModal.status === 'verified' ? 'Verified Pro' : 'Unverified'}
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 flex-1 p-3 rounded-xl border border-blue-100 text-center">
+                      <div className="h-8 flex justify-center items-center gap-1 text-2xl font-bold text-blue-700">
+                        <Star className="w-5 h-5 fill-current" />
+                        {(() => {
+                           const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
+                           const workerReviews = reviews.filter(r => r.worker_id === selectedWorkerForModal.id && r.would_rehire);
+                           return (selectedWorkerForModal.recommended_by || 0) + workerReviews.length;
+                        })()}
+                      </div>
+                      <div className="text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommendations</div>
+                    </div>
+                  </div>
+
+                  {/* Job & Review Flow inside Modal */}
+                  {(() => {
+                    const currentJob = myJobs.find(j => j.worker_id === selectedWorkerForModal.id);
+                    const currentReview = myReviews.find(r => r.job_id === currentJob?.id);
+                    
+                    return currentJob?.status === 'pending' ? (
+                     <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center shadow-sm animate-in fade-in duration-300">
+                       <h3 className="font-bold text-blue-900 mb-1 text-lg">Did this person do the job?</h3>
+                       <p className="text-sm text-blue-700 mb-4 opacity-80">You recently contacted them for service.</p>
+                       <div className="flex gap-3 justify-center">
+                         <button onClick={() => handleConfirmJob(currentJob.id, true)} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><CheckCircle2 className="w-5 h-5"/> Yes</button>
+                         <button onClick={() => handleConfirmJob(currentJob.id, false)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><XCircle className="w-5 h-5"/> No</button>
+                       </div>
+                     </div>
+                  ) : currentJob?.status === 'completed' && !currentReview ? (
+                     <button onClick={() => { setActiveJobId(currentJob.id); setActiveWorkerId(currentJob.worker_id); setShowReviewModal(true); setReviewStep(1); setReviewDraft({ tags: [] }); }} className="w-full flex items-center justify-center gap-2 mb-6 py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-[15px] transition-all shadow-md active:scale-[0.98] animate-in slide-in-from-bottom-2">
+                       <Star className="w-5 h-5 fill-current" /> Rate & Review Work
+                     </button>
+                  ) : currentJob?.status === 'failed' ? (
+                     <div className="mb-6 bg-gray-100 border border-gray-200 rounded-xl p-4 text-center text-gray-600 font-medium text-sm">
+                       Job marked as not completed.
+                     </div>
+                  ) : currentReview ? (
+                     <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 text-green-800 font-medium text-sm animate-in fade-in">
+                       <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
+                       <div>You've reviewed this worker. Thanks for keeping the community safe!</div>
+                     </div>
+                  ) : null;
+                  })()}
+
+                  <div className="mb-8">
+                    <h3 className="font-bold text-gray-900 mb-2">About</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {selectedWorkerForModal.bio || 'Professional service provider registered on Connect Local. Verified for quality and trust.'}
+                    </p>
+                  </div>
+
+                  {selectedWorkerForModal.specialties && (
+                    <div className="mb-8">
+                      <h3 className="font-bold text-gray-900 mb-3">Specialties & Skills</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedWorkerForModal.specialties.split(',').map((s: string, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold">{s.trim()}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-auto">
+                    {selectedWorkerForModal.is_available ? (
+                      <a
+                        href={`tel:${selectedWorkerForModal.contact_phone}`}
+                        className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
+                      >
+                        Call {selectedWorkerForModal.contact_phone}
+                      </a>
+                    ) : (
+                      <button disabled className="w-full py-4 bg-gray-200 text-gray-500 rounded-full font-bold text-lg cursor-not-allowed">
+                        Currently Unavailable
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

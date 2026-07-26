@@ -43,7 +43,7 @@ export interface LocalReview {
   created_at: string;
 }
 
-const DUMMY_WORKERS: WorkerSummary[] = [
+export const DUMMY_WORKERS: WorkerSummary[] = [
   {
     id: 'dummy-1',
     service_category: 'Plumber',
@@ -466,11 +466,6 @@ export default function WorkerSearch() {
           </Link>
           <Link to={homeLink} className="text-xl font-bold text-primary hidden sm:block">Connect Local</Link>
         </div>
-        {!isCustomer && (
-          <Link to="/login" className="text-primary font-medium text-sm border border-primary px-4 py-1.5 rounded-full hover:bg-blue-50 transition-colors">
-            Worker Login
-          </Link>
-        )}
       </header>
 
       <div className="flex-1 p-4 w-full max-w-6xl mx-auto">
