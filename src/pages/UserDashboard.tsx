@@ -1,8 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { Search, MapPin, LogOut, Star, ArrowRight } from 'lucide-react';
+import { Search, MapPin, LogOut, Star, ArrowRight, CheckCircle2, XCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+
+export interface LocalJob {
+  id: string;
+  user_id: string;
+  worker_id: string;
+  status: 'pending' | 'completed' | 'failed';
+  created_at: string;
+}
+
+export interface LocalReview {
+  id: string;
+  job_id: string;
+  user_id: string;
+  worker_id: string;
+  rating: 5 | 3 | 1;
+  tags: string[];
+  would_rehire: boolean;
+  created_at: string;
+}
 
 export default function UserDashboard() {
   const { user, signOut } = useAuthStore();
@@ -21,6 +40,52 @@ export default function UserDashboard() {
     if (service) params.append('service', service);
     if (street) params.append('street', street);
     navigate(`/search?${params.toString()}`);
+  };
+
+  const [myJobs, setMyJobs] = useState<LocalJob[]>([]);
+  const [myReviews, setMyReviews] = useState<LocalReview[]>([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [activeJobId, setActiveJobId] = useState('');
+  const [activeWorkerId, setActiveWorkerId] = useState('');
+  const [reviewStep, setReviewStep] = useState(1);
+  const [reviewDraft, setReviewDraft] = useState<Partial<LocalReview>>({ tags: [] });
+
+  useEffect(() => {
+    if (user) {
+      const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
+      setMyJobs(jobs.filter(j => j.user_id === user.id).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
+      setMyReviews(reviews.filter(r => r.user_id === user.id));
+    }
+  }, [user]);
+
+  const handleConfirmJob = (jobId: string, didComplete: boolean) => {
+    const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
+    const jobIdx = jobs.findIndex(j => j.id === jobId);
+    if (jobIdx !== -1) {
+      jobs[jobIdx].status = didComplete ? 'completed' : 'failed';
+      localStorage.setItem('local_jobs', JSON.stringify(jobs));
+      setMyJobs(jobs.filter(j => j.user_id === user?.id).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    }
+  };
+
+  const handleSubmitReview = (finalDraft: Partial<LocalReview>) => {
+    if (!user) return;
+    const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
+    const newReview: LocalReview = {
+      id: `rev-${Date.now()}`,
+      job_id: activeJobId,
+      user_id: user.id,
+      worker_id: activeWorkerId,
+      rating: finalDraft.rating as 5|3|1,
+      tags: finalDraft.tags || [],
+      would_rehire: finalDraft.would_rehire || false,
+      created_at: new Date().toISOString()
+    };
+    reviews.push(newReview);
+    localStorage.setItem('local_reviews', JSON.stringify(reviews));
+    setMyReviews([...myReviews, newReview]);
+    setShowReviewModal(false);
   };
 
   const handleLogout = async () => {
@@ -109,6 +174,59 @@ export default function UserDashboard() {
             </form>
           </div>
 
+          {/* My Recent Jobs */}
+          {myJobs.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">My Recent Jobs</h3>
+              <div className="space-y-4">
+                {myJobs.map(job => {
+                  const hasReview = myReviews.some(r => r.job_id === job.id);
+                  return (
+                    <div key={job.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">{new Date(job.created_at).toLocaleDateString()}</p>
+                          <h4 className="font-bold text-gray-900">Job Reference: {job.id.slice(-6)}</h4>
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${
+                          job.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          job.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {job.status}
+                        </span>
+                      </div>
+                      
+                      {job.status === 'pending' && (
+                        <div className="bg-blue-50 rounded-xl p-4">
+                          <p className="text-sm font-semibold text-blue-900 mb-3 text-center">Did the pro do the job?</p>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleConfirmJob(job.id, true)} className="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg text-sm">Yes</button>
+                            <button onClick={() => handleConfirmJob(job.id, false)} className="flex-1 bg-red-500 text-white font-bold py-2 rounded-lg text-sm">No</button>
+                          </div>
+                        </div>
+                      )}
+
+                      {job.status === 'completed' && !hasReview && (
+                        <button 
+                          onClick={() => { setActiveJobId(job.id); setActiveWorkerId(job.worker_id); setReviewStep(1); setReviewDraft({ tags: [] }); setShowReviewModal(true); }}
+                          className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-xl mt-2 flex items-center justify-center gap-2"
+                        >
+                          <Star className="w-4 h-4 fill-current" /> Leave a Review
+                        </button>
+                      )}
+
+                      {job.status === 'completed' && hasReview && (
+                        <div className="mt-2 text-sm text-green-700 bg-green-50 rounded-lg p-2 text-center font-medium flex items-center justify-center gap-1">
+                          <CheckCircle2 className="w-4 h-4" /> Review submitted
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Quick Access Services */}
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Popular services</h3>
@@ -144,6 +262,68 @@ export default function UserDashboard() {
 
         </div>
       </main>
+
+      {/* Tap-Only Review Modal Overlay */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
+            <div className="p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center leading-tight">
+                {reviewStep === 1 && "How was the service?"}
+                {reviewStep === 2 && "What stood out?"}
+                {reviewStep === 3 && "Final Question"}
+              </h3>
+              
+              {reviewStep === 1 && (
+                <div className="flex flex-col gap-3">
+                  <button onClick={() => { setReviewDraft(p => ({...p, rating: 5})); setReviewStep(2); }} className="w-full flex items-center gap-5 bg-green-50 hover:bg-green-100 p-5 rounded-2xl transition-all active:scale-[0.98]">
+                    <span className="text-4xl leading-none">👍</span> <span className="font-bold text-green-900 text-xl">Good</span>
+                  </button>
+                  <button onClick={() => { setReviewDraft(p => ({...p, rating: 3})); setReviewStep(2); }} className="w-full flex items-center gap-5 bg-gray-50 hover:bg-gray-100 p-5 rounded-2xl transition-all active:scale-[0.98]">
+                    <span className="text-4xl leading-none">😐</span> <span className="font-bold text-gray-900 text-xl">Okay</span>
+                  </button>
+                  <button onClick={() => { setReviewDraft(p => ({...p, rating: 1})); setReviewStep(2); }} className="w-full flex items-center gap-5 bg-red-50 hover:bg-red-100 p-5 rounded-2xl transition-all active:scale-[0.98]">
+                    <span className="text-4xl leading-none">👎</span> <span className="font-bold text-red-900 text-xl">Bad</span>
+                  </button>
+                </div>
+              )}
+              
+              {reviewStep === 2 && (
+                <div className="animate-in slide-in-from-right-4">
+                  <div className="flex flex-wrap gap-2.5 mb-8 justify-center">
+                    {['🛠️ Good work', '😊 Respectful', '⏱️ Fast', '💰 Fair price'].map(tag => (
+                      <button 
+                        key={tag}
+                        onClick={() => {
+                          const tags = reviewDraft.tags || [];
+                          if (tags.includes(tag)) setReviewDraft(p => ({...p, tags: tags.filter(t => t !== tag)}));
+                          else setReviewDraft(p => ({...p, tags: [...tags, tag]}));
+                        }}
+                        className={`px-5 py-3 rounded-full font-bold text-[15px] border-2 transition-all active:scale-95 ${reviewDraft.tags?.includes(tag) ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => setReviewStep(3)} className="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl text-lg transition-all shadow-md active:scale-[0.98]">Continue</button>
+                </div>
+              )}
+              
+              {reviewStep === 3 && (
+                <div className="flex flex-col gap-6 animate-in slide-in-from-right-4">
+                  <p className="text-center font-medium text-gray-600 text-lg">Would you call this worker again for future jobs?</p>
+                  <div className="flex gap-4">
+                    <button onClick={() => { const final = {...reviewDraft, would_rehire: true}; setReviewDraft(final); handleSubmitReview(final); }} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-2xl text-lg transition-all active:scale-95 shadow-md shadow-green-500/20">Yes</button>
+                    <button onClick={() => { const final = {...reviewDraft, would_rehire: false}; setReviewDraft(final); handleSubmitReview(final); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 rounded-2xl text-lg transition-all active:scale-95">No</button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Close Button */}
+            <button onClick={() => setShowReviewModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"><XCircle className="w-6 h-6"/></button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

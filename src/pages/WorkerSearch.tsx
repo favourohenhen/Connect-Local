@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, MapPin, ArrowLeft, Phone, Star, ShieldCheck, ThumbsUp } from 'lucide-react';
+import { Search, MapPin, ArrowLeft, Phone, Star, ShieldCheck, ThumbsUp, CheckCircle2, XCircle, ThumbsDown } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
 interface WorkerSummary {
@@ -22,6 +22,25 @@ interface WorkerSummary {
   profiles?: {
     full_name: string;
   };
+}
+
+export interface LocalJob {
+  id: string;
+  user_id: string;
+  worker_id: string;
+  status: 'pending' | 'completed' | 'failed';
+  created_at: string;
+}
+
+export interface LocalReview {
+  id: string;
+  job_id: string;
+  user_id: string;
+  worker_id: string;
+  rating: 5 | 3 | 1;
+  tags: string[];
+  would_rehire: boolean;
+  created_at: string;
 }
 
 const DUMMY_WORKERS: WorkerSummary[] = [
@@ -207,7 +226,7 @@ export default function WorkerSearch() {
   const [workers, setWorkers] = useState<WorkerSummary[]>([]);
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const { role } = useAuthStore();
+  const { role, user } = useAuthStore();
   const isCustomer = role === 'customer';
   const homeLink = isCustomer ? '/user/dashboard' : '/';
   const navigate = useNavigate();
@@ -219,36 +238,133 @@ export default function WorkerSearch() {
   // Modal State
   const [selectedWorker, setSelectedWorker] = useState<WorkerSummary | null>(null);
   const [copiedPhone, setCopiedPhone] = useState(false);
-  const [recommendedIds, setRecommendedIds] = useState<Set<string>>(new Set());
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  const handleCallClick = (phone?: string) => {
+  // Job & Review State
+  const [currentJob, setCurrentJob] = useState<LocalJob | null>(null);
+  const [currentReview, setCurrentReview] = useState<LocalReview | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewDraft, setReviewDraft] = useState<Partial<LocalReview>>({ tags: [] });
+  const [reviewStep, setReviewStep] = useState(1);
+
+  // Load active job and review when worker is selected
+  useEffect(() => {
+    if (selectedWorker && user) {
+      const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
+      const myJob = jobs.find(j => j.user_id === user.id && j.worker_id === selectedWorker.id);
+      setCurrentJob(myJob || null);
+      if (myJob) {
+        const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
+        const myReview = reviews.find(r => r.job_id === myJob.id);
+        setCurrentReview(myReview || null);
+      } else {
+        setCurrentReview(null);
+      }
+    } else {
+      setCurrentJob(null);
+      setCurrentReview(null);
+    }
+  }, [selectedWorker, user]);
+
+  const handleCallClick = (phone?: string, workerId?: string) => {
     if (phone) {
       navigator.clipboard.writeText(phone);
       setCopiedPhone(true);
       setTimeout(() => setCopiedPhone(false), 2000);
+      
+      // Create Job if not exists and user is logged in
+      if (user && workerId && !currentJob) {
+        // Rate limiting check
+        const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
+        const myRecentJobs = jobs.filter(j => j.user_id === user.id && (Date.now() - new Date(j.created_at).getTime() < 3600000));
+        if (myRecentJobs.length >= 3) {
+          alert("You've contacted too many workers recently. Please wait before contacting more.");
+          return;
+        }
+
+        const newJob: LocalJob = {
+          id: `job-${Date.now()}`,
+          user_id: user.id,
+          worker_id: workerId,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+        jobs.push(newJob);
+        localStorage.setItem('local_jobs', JSON.stringify(jobs));
+        setCurrentJob(newJob);
+      } else if (!user) {
+        setShowLoginPrompt(true);
+      }
     }
   };
 
-  const handleRecommend = (worker: WorkerSummary) => {
-    if (!role) {
-      setShowLoginPrompt(true);
-      return;
+  const handleConfirmJob = (didComplete: boolean) => {
+    if (!currentJob) return;
+    const jobs: LocalJob[] = JSON.parse(localStorage.getItem('local_jobs') || '[]');
+    const jobIdx = jobs.findIndex(j => j.id === currentJob.id);
+    if (jobIdx !== -1) {
+      jobs[jobIdx].status = didComplete ? 'completed' : 'failed';
+      localStorage.setItem('local_jobs', JSON.stringify(jobs));
+      setCurrentJob(jobs[jobIdx]);
     }
-    if (recommendedIds.has(worker.id)) return;
+  };
 
-    // Increment locally
-    const localWorkers: any[] = JSON.parse(localStorage.getItem('local_workers') || '[]');
-    const idx = localWorkers.findIndex(w => w.id === worker.id);
-    if (idx !== -1) {
-      localWorkers[idx].recommended_by = (localWorkers[idx].recommended_by || 0) + 1;
-      localStorage.setItem('local_workers', JSON.stringify(localWorkers));
+  const handleSubmitReview = (finalDraft: Partial<LocalReview>) => {
+    if (!currentJob || !user || !selectedWorker) return;
+    const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
+    const newReview: LocalReview = {
+      id: `rev-${Date.now()}`,
+      job_id: currentJob.id,
+      user_id: user.id,
+      worker_id: selectedWorker.id,
+      rating: finalDraft.rating as 5|3|1,
+      tags: finalDraft.tags || [],
+      would_rehire: finalDraft.would_rehire || false,
+      created_at: new Date().toISOString()
+    };
+    reviews.push(newReview);
+    localStorage.setItem('local_reviews', JSON.stringify(reviews));
+    setCurrentReview(newReview);
+    setShowReviewModal(false);
+  };
+
+  const getWorkerStats = (workerId: string) => {
+    const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
+    const workerReviews = reviews.filter(r => r.worker_id === workerId);
+    const w = workers.find(w => w.id === workerId) || DUMMY_WORKERS.find(d => d.id === workerId);
+    
+    if (workerReviews.length === 0) {
+       return { 
+         rating: 0, 
+         recommends: w?.recommended_by || 0,
+         good: 0, okay: 0, bad: 0,
+         tags: [] as string[]
+       };
     }
-    // Also try Supabase
-    supabase.from('workers').update({ recommended_by: (worker.recommended_by || 0) + 1 }).eq('id', worker.id).then(() => {});
-
-    setSelectedWorker(prev => prev ? { ...prev, recommended_by: (prev.recommended_by || 0) + 1 } : prev);
-    setRecommendedIds(prev => new Set(prev).add(worker.id));
+    
+    let sum = 0, good = 0, okay = 0, bad = 0;
+    const tagCounts: Record<string, number> = {};
+    let recommends = w?.recommended_by || 0;
+    
+    workerReviews.forEach(r => {
+      sum += r.rating;
+      if (r.rating === 5) good++;
+      else if (r.rating === 3) okay++;
+      else bad++;
+      
+      if (r.would_rehire) recommends++;
+      
+      r.tags.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+    });
+    
+    const tags = Object.entries(tagCounts).sort((a,b) => b[1] - a[1]).map(e => e[0]);
+    
+    return {
+       rating: (sum / workerReviews.length).toFixed(1),
+       recommends,
+       good, okay, bad,
+       tags
+    };
   };
 
   useEffect(() => {
@@ -545,16 +661,19 @@ export default function WorkerSearch() {
                     <div className="bg-blue-50 flex-1 p-3 rounded-xl border border-blue-100 text-center">
                       <div className="h-8 flex justify-center items-center gap-1 text-2xl font-bold text-blue-700">
                         <Star className="w-5 h-5 fill-current" />
-                        {selectedWorker.recommended_by || 0}
+                        {(() => {
+                           const stats = getWorkerStats(selectedWorker.id);
+                           return stats.recommends;
+                        })()}
                       </div>
                       <div className="text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommendations</div>
                     </div>
                   </div>
 
-                  {/* Recommend Button */}
+                  {/* Job & Review Flow */}
                   {showLoginPrompt ? (
                     <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                      <p className="text-amber-800 font-medium text-sm mb-3">Log in to recommend this worker</p>
+                      <p className="text-amber-800 font-medium text-sm mb-3">Log in to track jobs and leave reviews</p>
                       <div className="flex gap-2 justify-center">
                         <button
                           onClick={() => { setShowLoginPrompt(false); navigate('/user/login'); }}
@@ -570,20 +689,29 @@ export default function WorkerSearch() {
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => handleRecommend(selectedWorker)}
-                      disabled={recommendedIds.has(selectedWorker.id)}
-                      className={`w-full flex items-center justify-center gap-2 mb-6 py-3 rounded-xl font-semibold text-sm transition-all ${
-                        recommendedIds.has(selectedWorker.id)
-                          ? 'bg-green-50 text-green-700 border border-green-200 cursor-default'
-                          : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
-                      }`}
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                      {recommendedIds.has(selectedWorker.id) ? 'Recommended! ✓' : 'Add Recommendation'}
-                    </button>
-                  )}
+                  ) : currentJob?.status === 'pending' ? (
+                     <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center shadow-sm animate-in fade-in duration-300">
+                       <h3 className="font-bold text-blue-900 mb-1 text-lg">Did this person do the job?</h3>
+                       <p className="text-sm text-blue-700 mb-4 opacity-80">You recently contacted them for service.</p>
+                       <div className="flex gap-3 justify-center">
+                         <button onClick={() => handleConfirmJob(true)} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><CheckCircle2 className="w-5 h-5"/> Yes</button>
+                         <button onClick={() => handleConfirmJob(false)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><XCircle className="w-5 h-5"/> No</button>
+                       </div>
+                     </div>
+                  ) : currentJob?.status === 'completed' && !currentReview ? (
+                     <button onClick={() => { setShowReviewModal(true); setReviewStep(1); setReviewDraft({ tags: [] }); }} className="w-full flex items-center justify-center gap-2 mb-6 py-4 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-[15px] transition-all shadow-md active:scale-[0.98] animate-in slide-in-from-bottom-2">
+                       <Star className="w-5 h-5 fill-current" /> Rate & Review Work
+                     </button>
+                  ) : currentJob?.status === 'failed' ? (
+                     <div className="mb-6 bg-gray-100 border border-gray-200 rounded-xl p-4 text-center text-gray-600 font-medium text-sm">
+                       Job marked as not completed.
+                     </div>
+                  ) : currentReview ? (
+                     <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 text-green-800 font-medium text-sm animate-in fade-in">
+                       <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
+                       <div>You've reviewed this worker. Thanks for keeping the community safe!</div>
+                     </div>
+                  ) : null}
 
                   <div className="mb-8">
                     <h3 className="font-bold text-gray-900 mb-2">About</h3>
@@ -607,7 +735,7 @@ export default function WorkerSearch() {
                     {selectedWorker.is_available ? (
                       <a
                         href={`tel:${selectedWorker.contact_phone}`}
-                        onClick={() => handleCallClick(selectedWorker.contact_phone)}
+                        onClick={() => handleCallClick(selectedWorker.contact_phone, selectedWorker.id)}
                         className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
                       >
                         <Phone className="w-6 h-6" />
@@ -622,6 +750,68 @@ export default function WorkerSearch() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tap-Only Review Modal Overlay */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
+            <div className="p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center leading-tight">
+                {reviewStep === 1 && "How was the service?"}
+                {reviewStep === 2 && "What stood out?"}
+                {reviewStep === 3 && "Final Question"}
+              </h3>
+              
+              {reviewStep === 1 && (
+                <div className="flex flex-col gap-3">
+                  <button onClick={() => { setReviewDraft(p => ({...p, rating: 5})); setReviewStep(2); }} className="w-full flex items-center gap-5 bg-green-50 hover:bg-green-100 p-5 rounded-2xl transition-all active:scale-[0.98]">
+                    <span className="text-4xl leading-none">👍</span> <span className="font-bold text-green-900 text-xl">Good</span>
+                  </button>
+                  <button onClick={() => { setReviewDraft(p => ({...p, rating: 3})); setReviewStep(2); }} className="w-full flex items-center gap-5 bg-gray-50 hover:bg-gray-100 p-5 rounded-2xl transition-all active:scale-[0.98]">
+                    <span className="text-4xl leading-none">😐</span> <span className="font-bold text-gray-900 text-xl">Okay</span>
+                  </button>
+                  <button onClick={() => { setReviewDraft(p => ({...p, rating: 1})); setReviewStep(2); }} className="w-full flex items-center gap-5 bg-red-50 hover:bg-red-100 p-5 rounded-2xl transition-all active:scale-[0.98]">
+                    <span className="text-4xl leading-none">👎</span> <span className="font-bold text-red-900 text-xl">Bad</span>
+                  </button>
+                </div>
+              )}
+              
+              {reviewStep === 2 && (
+                <div className="animate-in slide-in-from-right-4">
+                  <div className="flex flex-wrap gap-2.5 mb-8 justify-center">
+                    {['🛠️ Good work', '😊 Respectful', '⏱️ Fast', '💰 Fair price'].map(tag => (
+                      <button 
+                        key={tag}
+                        onClick={() => {
+                          const tags = reviewDraft.tags || [];
+                          if (tags.includes(tag)) setReviewDraft(p => ({...p, tags: tags.filter(t => t !== tag)}));
+                          else setReviewDraft(p => ({...p, tags: [...tags, tag]}));
+                        }}
+                        className={`px-5 py-3 rounded-full font-bold text-[15px] border-2 transition-all active:scale-95 ${reviewDraft.tags?.includes(tag) ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-gray-600 border-gray-200'}`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => setReviewStep(3)} className="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl text-lg transition-all shadow-md active:scale-[0.98]">Continue</button>
+                </div>
+              )}
+              
+              {reviewStep === 3 && (
+                <div className="flex flex-col gap-6 animate-in slide-in-from-right-4">
+                  <p className="text-center font-medium text-gray-600 text-lg">Would you call this worker again for future jobs?</p>
+                  <div className="flex gap-4">
+                    <button onClick={() => { const final = {...reviewDraft, would_rehire: true}; setReviewDraft(final); handleSubmitReview(final); }} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-2xl text-lg transition-all active:scale-95 shadow-md shadow-green-500/20">Yes</button>
+                    <button onClick={() => { const final = {...reviewDraft, would_rehire: false}; setReviewDraft(final); handleSubmitReview(final); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 rounded-2xl text-lg transition-all active:scale-95">No</button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Close Button */}
+            <button onClick={() => setShowReviewModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"><XCircle className="w-6 h-6"/></button>
           </div>
         </div>
       )}

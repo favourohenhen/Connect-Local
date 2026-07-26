@@ -61,7 +61,6 @@ export default function Landing() {
             </>
           ) : (
             <>
-              <Link to="/user/login" className="text-base font-medium transition-colors hover:text-primary">Login</Link>
               <Link to="/signup" className="bg-white text-primary border-2 border-primary px-5 py-2 rounded-full font-semibold hover:bg-gray-50 transition-colors">
                 Offer Your Service
               </Link>
@@ -81,7 +80,6 @@ export default function Landing() {
             </button>
           ) : (
             <>
-              <Link to="/user/login" className="text-primary font-medium text-sm">Login</Link>
               <Link to="/signup" className="text-primary font-medium text-sm">Join as Pro</Link>
             </>
           )}
