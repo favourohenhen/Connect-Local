@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { Search, MapPin, LogOut, Star, ArrowRight, CheckCircle2, XCircle, ThumbsUp, ThumbsDown, ShieldCheck, ArrowLeft } from 'lucide-react';
-import { DUMMY_WORKERS } from './WorkerSearch';
+import { Search, MapPin, LogOut, Star, ArrowRight, CheckCircle2, XCircle, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 export interface LocalJob {
   id: string;

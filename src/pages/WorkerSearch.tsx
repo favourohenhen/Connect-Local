@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, MapPin, ArrowLeft, Phone, Star, ShieldCheck, ThumbsUp, CheckCircle2, XCircle, ThumbsDown } from 'lucide-react';
+import { Search, MapPin, ArrowLeft, Phone, Star, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
 interface WorkerSummary {

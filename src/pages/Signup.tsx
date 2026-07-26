@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { Eye, EyeOff, Camera, MapPin, Briefcase, Phone, User, FileText, CheckCircle2, ShieldCheck, Upload, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Upload, ArrowLeft } from 'lucide-react';
 
 export default function Signup() {
   const navigate = useNavigate();

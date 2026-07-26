@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ShieldCheck, ShieldX, ArrowLeft, Phone, MapPin, LogOut, Eye, RefreshCw, XCircle, Star } from 'lucide-react';
+import { ShieldCheck, ShieldX, ArrowLeft, Phone, MapPin, LogOut, Eye, RefreshCw, XCircle } from 'lucide-react';
 
 // Hardcoded admin credentials (MVP)
 const ADMIN_PHONE = '08000000000';
@@ -24,7 +24,6 @@ interface PendingWorker {
 }
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
