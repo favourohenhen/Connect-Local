@@ -31,9 +31,11 @@ export default function Signup() {
     specialties: '',
   });
 
-  // Images (Stored locally as Blob URLs for demo)
+  // Images
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [nin, setNin] = useState('');
 
@@ -65,9 +67,15 @@ export default function Signup() {
     return /^(?=.*[A-Za-z])(?=.*\d)[\x20-\x7E]{8,}$/.test(pw);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: React.Dispatch<React.SetStateAction<string | null>>,
+    fileSetter?: React.Dispatch<React.SetStateAction<File | null>>
+  ) => {
     if (e.target.files && e.target.files[0]) {
-      setter(URL.createObjectURL(e.target.files[0]));
+      const file = e.target.files[0];
+      if (fileSetter) fileSetter(file);
+      setter(URL.createObjectURL(file));
     }
   };
 
@@ -112,28 +120,57 @@ export default function Signup() {
       if (authError) throw authError;
 
       if (authData.user) {
+        let profileUrl = profileImage;
+        let coverUrl = coverImage;
+
+        if (profileImageFile) {
+          const fileExt = profileImageFile.name.split('.').pop();
+          const fileName = `${authData.user.id}-profile-${Date.now()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, profileImageFile);
+          if (!uploadError) {
+            const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+            profileUrl = data.publicUrl;
+          }
+        }
+
+        if (coverImageFile) {
+          const fileExt = coverImageFile.name.split('.').pop();
+          const fileName = `${authData.user.id}-cover-${Date.now()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage.from('covers').upload(fileName, coverImageFile);
+          if (!uploadError) {
+            const { data } = supabase.storage.from('covers').getPublicUrl(fileName);
+            coverUrl = data.publicUrl;
+          }
+        }
+
         const finalService = formData.serviceCategory === 'Other' ? formData.otherService : formData.serviceCategory;
-        const newWorker = {
-          id: authData.user?.id || `local-${Date.now()}`,
+        
+        // Insert into profiles
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: authData.user.id,
+          full_name: formData.fullName,
+          phone_number: formData.phone,
+          role: 'worker'
+        });
+        if (profileError) throw profileError;
+
+        // Insert into workers
+        const { error: workerError } = await supabase.from('workers').insert({
+          id: authData.user.id,
           service_category: finalService || 'General',
           location_area: formData.street,
           street: formData.street,
           contact_phone: formData.phone,
           is_available: formData.isAvailable,
-          profile_image: profileImage,
-          cover_image: coverImage,
+          profile_image_url: profileUrl,
+          cover_image: coverUrl,
           bio: formData.bio,
           specialties: formData.specialties,
           status: 'unverified',
           trust_score: 80,
-          recommended_by: 0,
-          created_at: new Date().toISOString(),
-          profiles: { full_name: formData.fullName }
-        };
-
-        const existingWorkers = JSON.parse(localStorage.getItem('local_workers') || '[]');
-        existingWorkers.push(newWorker);
-        localStorage.setItem('local_workers', JSON.stringify(existingWorkers));
+          recommended_by: 0
+        });
+        if (workerError) throw workerError;
 
         setUser(authData.user);
         setRole('worker');
@@ -277,7 +314,7 @@ export default function Signup() {
                         <span className="text-sm text-gray-500">Tap to upload face photo</span>
                       </>
                     )}
-                    <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, setProfileImage)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, setProfileImage, setProfileImageFile)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   </div>
                 </div>
 
@@ -293,7 +330,7 @@ export default function Signup() {
                         <span className="text-sm text-gray-500">Tap to upload background</span>
                       </>
                     )}
-                    <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, setCoverImage)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                    <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, setCoverImage, setCoverImageFile)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                   </div>
                 </div>
               </div>

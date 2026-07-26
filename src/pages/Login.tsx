@@ -42,7 +42,7 @@ export default function Login() {
           .from('profiles')
           .select('role')
           .eq('id', authData.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error('Failed to fetch profile:', profileError);

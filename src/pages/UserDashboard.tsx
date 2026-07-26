@@ -34,7 +34,7 @@ export default function UserDashboard() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (user) {
-        const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+        const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle();
         if (data && data.full_name) setDisplayName(data.full_name);
       }
     };

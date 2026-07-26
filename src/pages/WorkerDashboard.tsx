@@ -33,9 +33,9 @@ export default function WorkerDashboard() {
     try {
       const { data } = await supabase
         .from('workers')
-        .select('*, profiles!workers_id_fkey(full_name)')
+        .select('*, profiles(full_name)')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
       
       if (data) {
         setWorkerData(data);
@@ -72,9 +72,9 @@ export default function WorkerDashboard() {
       if (profileImageFile) {
         const fileExt = profileImageFile.name.split('.').pop();
         const fileName = `${user?.id}-profile-${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('worker_images').upload(fileName, profileImageFile);
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, profileImageFile);
         if (!uploadError) {
-          const { data } = supabase.storage.from('worker_images').getPublicUrl(fileName);
+          const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
           profileUrl = data.publicUrl;
         }
       }
@@ -82,9 +82,9 @@ export default function WorkerDashboard() {
       if (coverImageFile) {
         const fileExt = coverImageFile.name.split('.').pop();
         const fileName = `${user?.id}-cover-${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('worker_images').upload(fileName, coverImageFile);
+        const { error: uploadError } = await supabase.storage.from('covers').upload(fileName, coverImageFile);
         if (!uploadError) {
-          const { data } = supabase.storage.from('worker_images').getPublicUrl(fileName);
+          const { data } = supabase.storage.from('covers').getPublicUrl(fileName);
           coverUrl = data.publicUrl;
         }
       }

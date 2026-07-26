@@ -65,19 +65,17 @@ export default function UserSignup() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Store community user in localStorage
-        const newUser = {
+        const { error: profileError } = await supabase.from('profiles').insert({
           id: authData.user.id,
           full_name: formData.fullName,
-          phone: formData.phone,
-          street: formData.street,
-          role: 'customer',
-          created_at: new Date().toISOString(),
-        };
+          phone_number: formData.phone,
+          role: 'customer'
+        });
 
-        const existingUsers = JSON.parse(localStorage.getItem('local_users') || '[]');
-        existingUsers.push(newUser);
-        localStorage.setItem('local_users', JSON.stringify(existingUsers));
+        if (profileError) {
+          console.error('Failed to insert profile:', profileError);
+          throw profileError;
+        }
 
         setUser(authData.user);
         setRole('customer');

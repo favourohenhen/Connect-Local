@@ -88,7 +88,7 @@ export default function WorkerSearch() {
             .from('reviews')
             .select('*')
             .eq('job_id', jobs[0].id)
-            .single();
+            .maybeSingle();
           setCurrentReview(reviews || null);
         } else {
           setCurrentJob(null);
@@ -233,7 +233,7 @@ export default function WorkerSearch() {
   const fetchWorkers = async (serviceTerm = '', streetTerm = '') => {
     setLoading(true);
     try {
-      let query = supabase.from('workers').select('id, service_category, location_area, street, status, trust_score, is_available, created_at, bio, profile_image_url, cover_image, recommended_by, contact_phone, specialties, profiles!workers_id_fkey(full_name)');
+      let query = supabase.from('workers').select('id, service_category, location_area, street, status, trust_score, is_available, created_at, bio, profile_image_url, cover_image, recommended_by, contact_phone, specialties, profiles(full_name)');
 
       if (serviceTerm) {
         query = query.ilike('service_category', `%${serviceTerm}%`);
@@ -249,23 +249,13 @@ export default function WorkerSearch() {
 
       if (reviewsData) setAllReviews(reviewsData);
 
-      const isProfileComplete = (worker: any) => {
-        let count = 0;
-        if (worker.profiles?.full_name) count++;
-        if (worker.service_category) count++;
-        if (worker.contact_phone) count++;
-        if (worker.street || worker.location_area) count++;
-        if (worker.bio) count++;
-        if (worker.profile_image_url || worker.profile_image) count++; // Handle Supabase standard fields
-        if (worker.cover_image) count++;
-        return count === 7;
-      };
-
       const dbWorkers = (workersData as any[]) || [];
       const completeDbWorkers = dbWorkers.map(w => ({
         ...w,
-        profile_image: w.profile_image_url // normalize image field
-      })).filter(isProfileComplete);
+        profile_image: w.profile_image_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+        cover_image: w.cover_image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
+        contact_phone: w.contact_phone || '08000000000'
+      }));
 
       setWorkers(completeDbWorkers);
     } catch (err) {
