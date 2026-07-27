@@ -136,6 +136,11 @@ export default function UserDashboard() {
 
     if (data && !error) {
       setMyReviews(prev => [...prev, data]);
+
+      // If user said they'd rehire, increment the worker's recommendation count
+      if (finalDraft.would_rehire) {
+        await supabase.rpc('increment_recommended_by', { worker_id: activeWorkerId });
+      }
     }
     setShowReviewModal(false);
   };

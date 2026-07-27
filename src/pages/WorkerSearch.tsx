@@ -173,6 +173,17 @@ export default function WorkerSearch() {
     if (data && !error) {
       setCurrentReview(data);
       setAllReviews([...allReviews, data]);
+
+      // If user said they'd rehire, increment the worker's recommendation count
+      if (finalDraft.would_rehire) {
+        await supabase.rpc('increment_recommended_by', { worker_id: selectedWorker.id });
+        // Update the count locally so the UI reflects it immediately
+        setWorkers(prev => prev.map(w =>
+          w.id === selectedWorker.id
+            ? { ...w, recommended_by: (w.recommended_by || 0) + 1 }
+            : w
+        ));
+      }
     }
     setShowReviewModal(false);
   };
@@ -242,10 +253,14 @@ export default function WorkerSearch() {
         query = query.or(`location_area.ilike.%${streetTerm}%,street.ilike.%${streetTerm}%`);
       }
 
-      const [{ data: workersData }, { data: reviewsData }] = await Promise.all([
+      const [{ data: workersData, error: workersError }, { data: reviewsData }] = await Promise.all([
         query,
         supabase.from('reviews').select('*')
       ]);
+
+      if (workersError) {
+        console.error('[WorkerSearch] Query error:', workersError);
+      }
 
       if (reviewsData) setAllReviews(reviewsData);
 
