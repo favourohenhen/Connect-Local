@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useAuthStore } from './store/useAuthStore';
@@ -16,13 +16,13 @@ import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 
 /** Redirects unauthenticated users to /user/login, preserving the intended destination. */
-function RequireAuth({ children }: { children: JSX.Element }) {
+function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
   const location = useLocation();
   if (!user) {
     return <Navigate to="/user/login" state={{ from: location.pathname }} replace />;
   }
-  return children;
+  return <>{children}</>;
 }
 
 function App() {
