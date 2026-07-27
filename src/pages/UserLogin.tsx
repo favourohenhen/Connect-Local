@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { Eye, EyeOff, ArrowLeft, Phone } from 'lucide-react';
@@ -12,6 +12,8 @@ export default function UserLogin() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from || '/user/dashboard';
   const setRole = useAuthStore(state => state.setRole);
   const setUser = useAuthStore(state => state.setUser);
 
@@ -45,7 +47,7 @@ export default function UserLogin() {
 
         setRole(profileData?.role || 'customer');
         setUser(authData.user);
-        navigate('/user/dashboard');
+        navigate(from, { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'Invalid phone number or password.');

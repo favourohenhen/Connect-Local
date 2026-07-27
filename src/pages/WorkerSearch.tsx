@@ -295,6 +295,15 @@ export default function WorkerSearch() {
     document.body.style.overflow = 'auto';
   };
 
+  // Close modal on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedWorker) closeModal();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedWorker]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <header className="bg-white shadow-sm py-4 px-4 md:px-6 flex justify-between items-center sticky top-0 z-40">
@@ -313,23 +322,29 @@ export default function WorkerSearch() {
         </div>
         <form onSubmit={handleSearch} className="mb-8 flex flex-col md:flex-row gap-2 bg-white p-2 rounded-2xl md:rounded-full shadow-sm border border-gray-200">
           <div className="flex-1 flex items-center px-4 py-2 border-b md:border-b-0 md:border-r border-gray-100">
-            <Search className="text-gray-400 w-5 h-5 mr-3 shrink-0" />
+            <Search className="text-gray-400 w-5 h-5 mr-3 shrink-0" aria-hidden="true" />
+            <label htmlFor="search-service" className="sr-only">Search by service</label>
             <input
+              id="search-service"
               type="text"
               placeholder="E.g. Plumber, Barber..."
               value={searchService}
               onChange={(e) => setSearchService(e.target.value)}
+              aria-label="Search by service"
               className="w-full bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
             />
           </div>
           <div className="flex-1 flex items-center px-4 py-2">
-            <MapPin className="text-gray-400 w-5 h-5 mr-3 shrink-0" />
+            <MapPin className="text-gray-400 w-5 h-5 mr-3 shrink-0" aria-hidden="true" />
+            <label htmlFor="search-street" className="sr-only">Filter by street</label>
             <input
+              id="search-street"
               type="text"
               list="street-options"
               placeholder="Filter by Street (e.g. Mechanic Road)"
               value={searchStreet}
               onChange={(e) => setSearchStreet(e.target.value)}
+              aria-label="Filter by street"
               className="w-full bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
             />
             <datalist id="street-options">
@@ -365,7 +380,7 @@ export default function WorkerSearch() {
                     </div>
                   )}
                   {worker.cover_image ? (
-                    <img src={worker.cover_image} alt="Cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={worker.cover_image} alt={`${worker.service_category} work`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full bg-gray-200" />
                   )}
@@ -380,7 +395,7 @@ export default function WorkerSearch() {
                   <div className="absolute -top-10 left-5">
                     <img
                       src={worker.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${worker.profiles?.full_name}`}
-                      alt={worker.profiles?.full_name}
+                      alt={`${worker.profiles?.full_name} – ${worker.service_category}`}
                       className="w-20 h-20 rounded-full border-4 border-white object-cover shadow-sm bg-white"
                     />
                   </div>
@@ -448,14 +463,24 @@ export default function WorkerSearch() {
 
       {/* Modal Overlay */}
       {selectedWorker && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={closeModal}>
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+          onClick={closeModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedWorker.profiles?.full_name} – ${selectedWorker.service_category} profile`}
+        >
           <div
             className="w-full sm:max-w-md flex flex-col max-h-[90vh] animate-in slide-in-from-bottom sm:zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative w-full rounded-t-3xl sm:rounded-3xl overflow-hidden bg-white shadow-2xl flex flex-col">
               <div className="absolute top-0 left-0 right-0 h-48 shrink-0">
-                <img src={selectedWorker.cover_image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=800&fit=crop'} alt="Cover" className="w-full h-full object-cover" />
+                <img
+                  src={selectedWorker.cover_image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=800&fit=crop'}
+                  alt={`${selectedWorker.service_category} work by ${selectedWorker.profiles?.full_name}`}
+                  className="w-full h-full object-cover"
+                />
                 <div className="absolute inset-0 bg-black/20" />
                 <button
                   onClick={closeModal}
@@ -470,7 +495,7 @@ export default function WorkerSearch() {
                   <div className="absolute -top-12 left-6">
                     <img
                       src={selectedWorker.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${selectedWorker.profiles?.full_name}`}
-                      alt={selectedWorker.profiles?.full_name}
+                      alt={`${selectedWorker.profiles?.full_name} – ${selectedWorker.service_category}`}
                       className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-md bg-white"
                     />
                   </div>
@@ -493,7 +518,7 @@ export default function WorkerSearch() {
                         <div className="flex gap-3 mb-6">
                           <div className="bg-gray-50 flex-1 p-3 rounded-xl border border-gray-100 text-center">
                             <div className="h-8 flex justify-center items-center">
-                              {selectedWorker.status === 'verified' ? <ShieldCheck className="w-6 h-6 text-green-500" /> : <span className="text-gray-400 font-bold">---</span>}
+                              {selectedWorker.status === 'verified' ? <ShieldCheck className="w-6 h-6 text-green-500" aria-hidden="true" /> : <span className="text-gray-400 font-bold" aria-label="Unverified">---</span>}
                             </div>
                             <div className="text-[10px] sm:text-xs text-gray-500 uppercase font-bold tracking-wide mt-1">
                               {selectedWorker.status === 'verified' ? 'Verified' : 'Unverified'}
@@ -501,16 +526,10 @@ export default function WorkerSearch() {
                           </div>
                           <div className="bg-blue-50 flex-1 p-3 rounded-xl border border-blue-100 text-center">
                             <div className="h-8 flex justify-center items-center gap-1 text-xl sm:text-2xl font-bold text-blue-700">
-                              <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                              <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" aria-hidden="true" />
                               {stats.recommends}
                             </div>
                             <div className="text-[10px] sm:text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommends</div>
-                          </div>
-                          <div className="bg-amber-50 flex-1 p-3 rounded-xl border border-amber-100 text-center">
-                            <div className="h-8 flex justify-center items-center text-xl sm:text-2xl font-bold text-amber-700">
-                              {stats.rating != 0 ? stats.rating : '-'}
-                            </div>
-                            <div className="text-[10px] sm:text-xs text-amber-600 uppercase font-bold tracking-wide mt-1">Avg Rating</div>
                           </div>
                         </div>
 

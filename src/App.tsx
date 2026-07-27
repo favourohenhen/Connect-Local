@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useAuthStore } from './store/useAuthStore';
 
@@ -14,6 +14,16 @@ import UserLogin from './pages/UserLogin';
 import UserSignup from './pages/UserSignup';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+
+/** Redirects unauthenticated users to /user/login, preserving the intended destination. */
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const { user } = useAuthStore();
+  const location = useLocation();
+  if (!user) {
+    return <Navigate to="/user/login" state={{ from: location.pathname }} replace />;
+  }
+  return children;
+}
 
 function App() {
   const { user, role, setUser, setRole } = useAuthStore();
@@ -67,9 +77,9 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
-      {/* Search is public — users can browse without logging in */}
-      <Route path="/search" element={<WorkerSearch />} />
-      <Route path="/worker/:id" element={<WorkerProfile />} />
+      {/* Protected browse routes — must be logged in to view workers */}
+      <Route path="/search" element={<RequireAuth><WorkerSearch /></RequireAuth>} />
+      <Route path="/worker/:id" element={<RequireAuth><WorkerProfile /></RequireAuth>} />
       
       {/* Auth Routes */}
       <Route path="/login" element={
