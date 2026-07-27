@@ -486,26 +486,55 @@ export default function WorkerSearch() {
                     </p>
                   </div>
 
-                  <div className="flex gap-4 mb-4">
-                    <div className="bg-gray-50 flex-1 p-3 rounded-xl border border-gray-100 text-center">
-                      <div className="h-8 flex justify-center items-center">
-                        {selectedWorker.status === 'verified' ? <ShieldCheck className="w-6 h-6 text-green-500" /> : <span className="text-gray-400 font-bold">---</span>}
-                      </div>
-                      <div className="text-xs text-gray-500 uppercase font-bold tracking-wide mt-1">
-                        {selectedWorker.status === 'verified' ? 'Verified Pro' : 'Unverified'}
-                      </div>
-                    </div>
-                    <div className="bg-blue-50 flex-1 p-3 rounded-xl border border-blue-100 text-center">
-                      <div className="h-8 flex justify-center items-center gap-1 text-2xl font-bold text-blue-700">
-                        <Star className="w-5 h-5 fill-current" />
-                        {(() => {
-                           const stats = getWorkerStats(selectedWorker.id);
-                           return stats.recommends;
-                        })()}
-                      </div>
-                      <div className="text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommendations</div>
-                    </div>
-                  </div>
+                  {(() => {
+                    const stats = getWorkerStats(selectedWorker.id);
+                    return (
+                      <>
+                        <div className="flex gap-3 mb-6">
+                          <div className="bg-gray-50 flex-1 p-3 rounded-xl border border-gray-100 text-center">
+                            <div className="h-8 flex justify-center items-center">
+                              {selectedWorker.status === 'verified' ? <ShieldCheck className="w-6 h-6 text-green-500" /> : <span className="text-gray-400 font-bold">---</span>}
+                            </div>
+                            <div className="text-[10px] sm:text-xs text-gray-500 uppercase font-bold tracking-wide mt-1">
+                              {selectedWorker.status === 'verified' ? 'Verified' : 'Unverified'}
+                            </div>
+                          </div>
+                          <div className="bg-blue-50 flex-1 p-3 rounded-xl border border-blue-100 text-center">
+                            <div className="h-8 flex justify-center items-center gap-1 text-xl sm:text-2xl font-bold text-blue-700">
+                              <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                              {stats.recommends}
+                            </div>
+                            <div className="text-[10px] sm:text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommends</div>
+                          </div>
+                          <div className="bg-amber-50 flex-1 p-3 rounded-xl border border-amber-100 text-center">
+                            <div className="h-8 flex justify-center items-center text-xl sm:text-2xl font-bold text-amber-700">
+                              {stats.rating != 0 ? stats.rating : '-'}
+                            </div>
+                            <div className="text-[10px] sm:text-xs text-amber-600 uppercase font-bold tracking-wide mt-1">Avg Rating</div>
+                          </div>
+                        </div>
+
+                        {/* Reviews Breakdown */}
+                        {(stats.good > 0 || stats.okay > 0 || stats.bad > 0) && (
+                          <div className="mb-6 bg-gray-50 rounded-xl p-4 border border-gray-100 shadow-inner">
+                            <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">Community Reviews</h4>
+                            <div className="flex justify-between items-center mb-4 bg-white p-2 rounded-lg border border-gray-200">
+                              <div className="flex flex-col items-center flex-1 border-r border-gray-100 last:border-0"><span className="text-xl mb-1">👍</span> <span className="font-bold text-gray-800 text-sm">{stats.good}</span></div>
+                              <div className="flex flex-col items-center flex-1 border-r border-gray-100 last:border-0"><span className="text-xl mb-1">😐</span> <span className="font-bold text-gray-800 text-sm">{stats.okay}</span></div>
+                              <div className="flex flex-col items-center flex-1"><span className="text-xl mb-1">👎</span> <span className="font-bold text-gray-800 text-sm">{stats.bad}</span></div>
+                            </div>
+                            {stats.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {stats.tags.slice(0, 5).map(tag => (
+                                  <span key={tag} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold shadow-sm">{tag}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   {/* Job & Review Flow */}
                   {showLoginPrompt ? (
