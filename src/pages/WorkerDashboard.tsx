@@ -101,7 +101,7 @@ export default function WorkerDashboard() {
         specialties: editForm.specialties
       };
       
-      const { data, error } = await supabase.from('workers').update(updatePayload).eq('id', user?.id).select().single();
+      const { data, error } = await supabase.from('workers').update(updatePayload).eq('id', user?.id).select().maybeSingle();
       
       if (!error && data) {
         setWorkerData({ ...workerData, ...data, profile_image: profileUrl });

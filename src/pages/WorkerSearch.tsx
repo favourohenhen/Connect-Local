@@ -129,7 +129,7 @@ export default function WorkerSearch() {
             status: 'pending'
           })
           .select()
-          .single();
+          .maybeSingle();
 
         if (data && !error) {
           setCurrentJob(data);
@@ -148,7 +148,7 @@ export default function WorkerSearch() {
       .update({ status: newStatus })
       .eq('id', currentJob.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (data && !error) {
       setCurrentJob(data);
@@ -423,11 +423,11 @@ export default function WorkerSearch() {
                   <button
                     className="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-primary border border-gray-200 py-3 rounded-xl font-bold transition-colors"
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent modal from opening
-                      if (worker.contact_phone) window.location.href = `tel:${worker.contact_phone}`;
+                      e.stopPropagation();
+                      openModal(worker); // Open modal so job/login flow triggers
                     }}
                   >
-                    <Phone className="w-5 h-5" /> Call Now
+                    <Phone className="w-5 h-5" /> View & Call
                   </button>
                 </div>
               </div>
