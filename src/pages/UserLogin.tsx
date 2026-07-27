@@ -8,6 +8,7 @@ export default function UserLogin() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -17,6 +18,12 @@ export default function UserLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (phone.length !== 11) {
+      setError('Phone number must be exactly 11 digits.');
+      return;
+    }
+
     setLoading(true);
 
     const placeholderEmail = `${phone.replace(/\s+/g, '')}@connectlocal.app`;
@@ -30,26 +37,13 @@ export default function UserLogin() {
       if (authError) throw authError;
 
       if (authData.user) {
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', authData.user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError) {
-          console.error('Failed to fetch profile:', profileError);
-          // Fallback: check localStorage for community user
-          const localUsers: any[] = JSON.parse(localStorage.getItem('local_users') || '[]');
-          const found = localUsers.find(u => u.id === authData.user!.id);
-          if (found) {
-            setRole('customer');
-          } else {
-            setRole('customer');
-          }
-        } else if (profileData) {
-          setRole(profileData.role);
-        }
-
+        setRole(profileData?.role || 'customer');
         setUser(authData.user);
         navigate('/user/dashboard');
       }
@@ -58,6 +52,16 @@ export default function UserLogin() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numericValue = e.target.value.replace(/\D/g, '');
+    if (numericValue.length > 0 && numericValue.length !== 11) {
+      setPhoneError('Phone number must be exactly 11 digits (e.g. 08012345678).');
+    } else {
+      setPhoneError('');
+    }
+    setPhone(numericValue);
   };
 
   return (
@@ -85,11 +89,13 @@ export default function UserLogin() {
                 type="tel"
                 required
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                onChange={handlePhoneChange}
+                maxLength={11}
+                className={`w-full pl-11 pr-4 py-3 rounded-lg border ${phoneError ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all`}
                 placeholder="e.g. 08012345678"
               />
             </div>
+            {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
           </div>
 
           <div>

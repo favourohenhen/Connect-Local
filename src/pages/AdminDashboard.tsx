@@ -15,7 +15,7 @@ interface PendingWorker {
   location_area?: string;
   contact_phone?: string;
   bio?: string;
-  profile_image?: string;
+  profile_image_url?: string;
   cover_image?: string;
   status: string;
   trust_score: number;
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
                   >
                     {/* Avatar */}
                     <img
-                      src={worker.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${worker.profiles?.full_name || 'W'}`}
+                      src={worker.profile_image_url || `https://api.dicebear.com/7.x/initials/svg?seed=${worker.profiles?.full_name || 'W'}`}
                       alt={worker.profiles?.full_name}
                       className="w-14 h-14 rounded-full object-cover border-2 border-gray-100 shrink-0"
                     />
@@ -316,10 +316,10 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-2xl shadow-lg p-6 relative">
                   <div 
                     className="absolute -top-12 left-6 cursor-pointer group"
-                    onClick={() => setFullscreenImage(preview.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${preview.profiles?.full_name}`)}
+                    onClick={() => setFullscreenImage(preview.profile_image_url || `https://api.dicebear.com/7.x/initials/svg?seed=${preview.profiles?.full_name}`)}
                   >
                     <img
-                      src={preview.profile_image || `https://api.dicebear.com/7.x/initials/svg?seed=${preview.profiles?.full_name}`}
+                      src={preview.profile_image_url || `https://api.dicebear.com/7.x/initials/svg?seed=${preview.profiles?.full_name}`}
                       alt={preview.profiles?.full_name}
                       className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-md bg-white transition-transform duration-300 group-hover:scale-110"
                     />

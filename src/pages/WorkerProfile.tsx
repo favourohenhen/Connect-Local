@@ -30,9 +30,9 @@ export default function WorkerProfile() {
       try {
         const { data, error } = await supabase
           .from('workers')
-          .select('*, profiles(full_name)')
+          .select('*, profiles!workers_id_fkey(full_name)')
           .eq('id', id)
-          .single();
+          .maybeSingle();
         
         if (error) throw error;
         setWorker(data as unknown as Worker);

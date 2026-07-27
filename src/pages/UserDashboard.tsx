@@ -112,7 +112,7 @@ export default function UserDashboard() {
       .update({ status: newStatus })
       .eq('id', jobId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (data && !error) {
       setMyJobs(prev => prev.map(j => j.id === jobId ? data : j).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
@@ -132,11 +132,10 @@ export default function UserDashboard() {
         would_rehire: finalDraft.would_rehire || false
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (data && !error) {
       setMyReviews(prev => [...prev, data]);
-
       // If user said they'd rehire, increment the worker's recommendation count
       if (finalDraft.would_rehire) {
         await supabase.rpc('increment_recommended_by', { worker_id: activeWorkerId });

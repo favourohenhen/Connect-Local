@@ -43,13 +43,13 @@ function App() {
 
   const fetchRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
-      if (!error && data) {
+      if (data) {
         setRole(data.role);
       }
     } catch (err) {
@@ -67,10 +67,9 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
-      
-      {/* Protected Search & Profiles (Must be logged in as either worker or community user) */}
-      <Route path="/search" element={user ? <WorkerSearch /> : <Navigate to="/user/login" replace />} />
-      <Route path="/worker/:id" element={user ? <WorkerProfile /> : <Navigate to="/user/login" replace />} />
+      {/* Search is public — users can browse without logging in */}
+      <Route path="/search" element={<WorkerSearch />} />
+      <Route path="/worker/:id" element={<WorkerProfile />} />
       
       {/* Auth Routes */}
       <Route path="/login" element={
