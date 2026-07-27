@@ -183,6 +183,7 @@ export default function WorkerSearch() {
             ? { ...w, recommended_by: (w.recommended_by || 0) + 1 }
             : w
         ));
+        setSelectedWorker(prev => prev ? { ...prev, recommended_by: (prev.recommended_by || 0) + 1 } : null);
       }
     }
     setShowReviewModal(false);
@@ -211,7 +212,6 @@ export default function WorkerSearch() {
       else if (r.rating === 3) okay++;
       else bad++;
       
-      if (r.would_rehire) recommends++;
       r.tags?.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
     });
     

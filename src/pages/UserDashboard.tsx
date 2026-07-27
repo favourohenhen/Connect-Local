@@ -445,11 +445,7 @@ export default function UserDashboard() {
                     <div className="bg-blue-50 flex-1 p-3 rounded-xl border border-blue-100 text-center">
                       <div className="h-8 flex justify-center items-center gap-1 text-2xl font-bold text-blue-700">
                         <Star className="w-5 h-5 fill-current" />
-                        {(() => {
-                           const reviews: LocalReview[] = JSON.parse(localStorage.getItem('local_reviews') || '[]');
-                           const workerReviews = reviews.filter(r => r.worker_id === selectedWorkerForModal.id && r.would_rehire);
-                           return (selectedWorkerForModal.recommended_by || 0) + workerReviews.length;
-                        })()}
+                        {selectedWorkerForModal.recommended_by || 0}
                       </div>
                       <div className="text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommendations</div>
                     </div>
