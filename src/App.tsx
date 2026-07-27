@@ -58,7 +58,7 @@ function App() {
         .select('role')
         .eq('id', userId)
         .maybeSingle();
-      
+
       if (data) {
         setRole(data.role);
       }
@@ -80,31 +80,31 @@ function App() {
       {/* Protected browse routes — must be logged in to view workers */}
       <Route path="/search" element={<RequireAuth><WorkerSearch /></RequireAuth>} />
       <Route path="/worker/:id" element={<RequireAuth><WorkerProfile /></RequireAuth>} />
-      
+
       {/* Auth Routes */}
       <Route path="/login" element={
-        !user ? <Login /> : 
-        role === 'worker' ? <Navigate to="/dashboard" replace /> : 
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-          <p className="text-gray-600 mb-4">Finishing account setup...</p>
-          <button onClick={() => supabase.auth.signOut()} className="text-primary underline">Sign out to retry if stuck</button>
-        </div>
+        !user ? <Login /> :
+          role === 'worker' ? <Navigate to="/dashboard" replace /> :
+            <div className="min-h-screen flex flex-col items-center justify-center p-4">
+              <p className="text-gray-600 mb-4">Finishing account setup...</p>
+              <button onClick={() => supabase.auth.signOut()} className="text-primary underline">Sign out to retry if stuck</button>
+            </div>
       } />
       <Route path="/signup" element={
-        !user ? <Signup /> : 
-        role === 'worker' ? <Navigate to="/dashboard" replace /> : 
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-          <p className="text-gray-600 mb-4">Finishing account setup...</p>
-          <button onClick={() => supabase.auth.signOut()} className="text-primary underline">Sign out to retry if stuck</button>
-        </div>
+        !user ? <Signup /> :
+          role === 'worker' ? <Navigate to="/dashboard" replace /> :
+            <div className="min-h-screen flex flex-col items-center justify-center p-4">
+              <p className="text-gray-600 mb-4">Finishing account setup...</p>
+              <button onClick={() => supabase.auth.signOut()} className="text-primary underline">Sign out to retry if stuck</button>
+            </div>
       } />
-      
+
       {/* Protected Worker Route */}
-      <Route 
-        path="/dashboard" 
-        element={user && role === 'worker' ? <WorkerDashboard /> : <Navigate to="/login" replace />} 
+      <Route
+        path="/dashboard"
+        element={user && role === 'worker' ? <WorkerDashboard /> : <Navigate to="/login" replace />}
       />
-      
+
       {/* Community User Auth Routes */}
       <Route path="/user/login" element={!user ? <UserLogin /> : <Navigate to="/user/dashboard" replace />} />
       <Route path="/user/signup" element={!user ? <UserSignup /> : <Navigate to="/user/dashboard" replace />} />
