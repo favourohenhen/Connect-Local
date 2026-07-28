@@ -37,8 +37,14 @@ export default function AdminDashboard() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginPhone === ADMIN_PHONE && loginPassword === ADMIN_PASSWORD) {
+    
+    // Remove any spaces or non-digit characters from the phone input
+    const cleanPhone = loginPhone.replace(/\D/g, '');
+    const cleanPassword = loginPassword.trim();
+
+    if (cleanPhone === ADMIN_PHONE && cleanPassword === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
+      setLoginError('');
     } else {
       setLoginError('Invalid admin credentials.');
     }
