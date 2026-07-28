@@ -76,6 +76,8 @@ export default function WorkerDashboard() {
         if (!uploadError) {
           const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
           profileUrl = data.publicUrl;
+        } else {
+          throw uploadError;
         }
       }
 
@@ -86,6 +88,8 @@ export default function WorkerDashboard() {
         if (!uploadError) {
           const { data } = supabase.storage.from('covers').getPublicUrl(fileName);
           coverUrl = data.publicUrl;
+        } else {
+          throw uploadError;
         }
       }
 

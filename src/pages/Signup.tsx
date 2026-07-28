@@ -120,8 +120,8 @@ export default function Signup() {
       if (authError) throw authError;
 
       if (authData.user) {
-        let profileUrl = profileImage;
-        let coverUrl = coverImage;
+        let profileUrl = '';
+        let coverUrl = '';
 
         if (profileImageFile) {
           const fileExt = profileImageFile.name.split('.').pop();
