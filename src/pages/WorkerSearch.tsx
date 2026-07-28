@@ -58,6 +58,7 @@ export default function WorkerSearch() {
   const [searchService, setSearchService] = useState(params.get('service') || '');
   const [searchStreet, setSearchStreet] = useState(params.get('street') || '');
   const [loading, setLoading] = useState(true);
+  const [isCalling, setIsCalling] = useState(false);
 
   // Modal State
   const [selectedWorker, setSelectedWorker] = useState<WorkerSummary | null>(null);
@@ -110,12 +111,14 @@ export default function WorkerSearch() {
   }, [selectedWorker, user]);
 
   const handleCallClick = async (phone?: string, workerId?: string) => {
+    if (isCalling) return;
     if (phone) {
       navigator.clipboard.writeText(phone);
       setCopiedPhone(true);
       setTimeout(() => setCopiedPhone(false), 2000);
 
       if (user && workerId && !currentJob) {
+        setIsCalling(true);
         // Rate limiting check
         const { data: recentJobs } = await supabase
           .from('jobs')
@@ -125,6 +128,7 @@ export default function WorkerSearch() {
 
         if (recentJobs && recentJobs.length >= 3) {
           alert("You've contacted too many workers recently. Please wait before contacting more.");
+          setIsCalling(false);
           return;
         }
 
@@ -139,7 +143,13 @@ export default function WorkerSearch() {
           .maybeSingle();
 
         if (data && !error) {
-          setCurrentJob(data);
+          // Add 2s delay so the phone dialer can open without UI interruption
+          setTimeout(() => {
+            setCurrentJob(data);
+            setIsCalling(false);
+          }, 2000);
+        } else {
+          setIsCalling(false);
         }
       }
     }
@@ -777,29 +787,33 @@ export default function WorkerSearch() {
                             Show the number
                           </button>
                         ) : (
-                          <button
+                          <a
+                            href={`tel:${selectedWorker.contact_phone}`}
                             onClick={() => {
-                              if (!currentJob) {
-                                setCurrentJob({
-                                  id: 'demo-job-id',
-                                  worker_id: selectedWorker.id,
-                                  user_id: 'demo-user',
-                                  status: 'pending',
-                                  created_at: new Date().toISOString()
-                                } as LocalJob);
+                              if (!currentJob && !isCalling) {
+                                setIsCalling(true);
+                                setTimeout(() => {
+                                  setCurrentJob({
+                                    id: 'demo-job-id',
+                                    worker_id: selectedWorker.id,
+                                    user_id: 'demo-user',
+                                    status: 'pending',
+                                    created_at: new Date().toISOString()
+                                  } as LocalJob);
+                                  setIsCalling(false);
+                                }, 2000);
                               }
                             }}
                             className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
                           >
                             <Phone className="w-6 h-6" />
                             Call {selectedWorker.contact_phone}
-                          </button>
+                          </a>
                         )
                       ) : (
                         <a
                           href={`tel:${selectedWorker.contact_phone}`}
-                          onClick={(e) => {
-                            if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) e.preventDefault();
+                          onClick={() => {
                             handleCallClick(selectedWorker.contact_phone, selectedWorker.id);
                           }}
                           className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"

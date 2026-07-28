@@ -236,7 +236,7 @@ export default function UserDashboard() {
               <h3 className="text-lg font-bold text-gray-900 mb-3">My Recent Jobs</h3>
               <div className="space-y-4">
                 {myJobs.map(job => {
-                  const hasReview = myReviews.some(r => r.job_id === job.id);
+                  const hasReview = myReviews.some(r => r.worker_id === job.worker_id);
                   const workerInfo = workerDetails[job.worker_id];
                   const fullName = workerInfo?.profiles?.full_name || 'Service Pro';
                   const service = workerInfo?.service_category || 'Local Worker';
