@@ -40,6 +40,8 @@ export interface LocalReview {
   rating: 5 | 3 | 1;
   tags: string[];
   would_rehire: boolean;
+  comment?: string;
+  profiles?: { full_name: string };
   created_at: string;
 }
 
@@ -134,8 +136,6 @@ export default function WorkerSearch() {
         if (data && !error) {
           setCurrentJob(data);
         }
-      } else if (!user) {
-        setShowLoginPrompt(true);
       }
     }
   };
@@ -145,7 +145,13 @@ export default function WorkerSearch() {
     const newStatus = didComplete ? 'completed' : 'failed';
 
     if (currentJob.id === 'demo-job-id') {
-      setCurrentJob({ ...currentJob, status: newStatus as any });
+      if (didComplete) {
+        // They want to leave a review! Prompt them to login, and bring them back here seamlessly.
+        navigate('/user/login', { state: { from: `/search?review_worker=${selectedWorker?.id}` } });
+      } else {
+        // Just cancel the flow locally
+        setCurrentJob({ ...currentJob, status: 'failed' as any });
+      }
       return;
     }
 
@@ -172,7 +178,9 @@ export default function WorkerSearch() {
         worker_id: selectedWorker.id,
         rating: finalDraft.rating || 5,
         tags: finalDraft.tags || [],
+        comment: finalDraft.comment || '',
         would_rehire: finalDraft.would_rehire || false,
+        profiles: { full_name: 'You (Demo)' },
         created_at: new Date().toISOString()
       } as LocalReview;
 
@@ -197,6 +205,7 @@ export default function WorkerSearch() {
         worker_id: selectedWorker.id,
         rating: finalDraft.rating,
         tags: finalDraft.tags || [],
+        comment: finalDraft.comment || null,
         would_rehire: finalDraft.would_rehire || false
       })
       .select()
@@ -234,12 +243,33 @@ export default function WorkerSearch() {
         const good = recs - okay - bad;
         const total = recs;
         const avgRating = total > 0 ? ((good * 5 + okay * 3 + bad * 1) / total).toFixed(1) : "0.0";
+        
+        // Generate a couple fake reviews for the demo
+        const fakeNames = ["Sarah M.", "David O.", "Michael T."];
+        const fakeComments = [
+          "Did a fantastic job! Very professional and finished on time. Would highly recommend.",
+          "Good service, very affordable.",
+          "Punctual and reliable."
+        ];
+        const reviewsList: LocalReview[] = Array.from({ length: Math.min(recs, 3) }).map((_, i) => ({
+          id: `fake-${i}`,
+          job_id: 'fake',
+          user_id: 'fake',
+          worker_id: workerId,
+          rating: 5,
+          tags: ['Professional', 'Punctual', 'Affordable'].slice(0, i + 1),
+          would_rehire: true,
+          comment: fakeComments[i],
+          profiles: { full_name: fakeNames[i] },
+          created_at: new Date(Date.now() - (i + 1) * 86400000 * 5).toISOString()
+        }));
 
         return {
           rating: Number(avgRating),
           recommends: recs,
           good, okay, bad,
-          tags: ['Professional', 'Punctual', 'Affordable'].slice(0, Math.max(1, Math.ceil(recs / 10)))
+          tags: ['Professional', 'Punctual', 'Affordable'].slice(0, Math.max(1, Math.ceil(recs / 10))),
+          reviewsList
         };
       }
 
@@ -247,7 +277,8 @@ export default function WorkerSearch() {
         rating: 0,
         recommends: 0,
         good: 0, okay: 0, bad: 0,
-        tags: [] as string[]
+        tags: [] as string[],
+        reviewsList: [] as LocalReview[]
       };
     }
 
@@ -270,7 +301,8 @@ export default function WorkerSearch() {
       rating: (sum / workerReviews.length).toFixed(1),
       recommends,
       good, okay, bad,
-      tags
+      tags,
+      reviewsList: workerReviews.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     };
   };
 
@@ -307,7 +339,7 @@ export default function WorkerSearch() {
 
       const [{ data: workersData, error: workersError }, { data: reviewsData }] = await Promise.all([
         query,
-        supabase.from('reviews').select('*')
+        supabase.from('reviews').select('*, profiles(full_name)')
       ]);
 
       if (workersError) {
@@ -344,6 +376,7 @@ export default function WorkerSearch() {
 
   const closeModal = () => {
     setSelectedWorker(null);
+    setDemoNumberRevealed(false);
     document.body.style.overflow = 'auto';
   };
 
@@ -355,6 +388,46 @@ export default function WorkerSearch() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedWorker]);
+
+  // Handle post-login redirect for leaving a review
+  useEffect(() => {
+    const reviewWorkerId = params.get('review_worker');
+    if (reviewWorkerId && user && workers.length > 0) {
+      const worker = workers.find(w => w.id === reviewWorkerId);
+      if (worker) {
+        // Automatically open the worker profile
+        setSelectedWorker(worker);
+        document.body.style.overflow = 'hidden';
+
+        // Ensure a completed job exists for this user + worker so the review modal shows up
+        const ensureJobAndReview = async () => {
+          try {
+            const { data: jobs } = await supabase.from('jobs').select('*').eq('user_id', user.id).eq('worker_id', worker.id).limit(1);
+            let job = jobs?.[0];
+
+            if (!job) {
+              const { data: newJob } = await supabase.from('jobs').insert({ user_id: user.id, worker_id: worker.id, status: 'completed' }).select().single();
+              job = newJob;
+            } else if (job.status !== 'completed') {
+              const { data: updatedJob } = await supabase.from('jobs').update({ status: 'completed' }).eq('id', job.id).select().single();
+              job = updatedJob;
+            }
+
+            setCurrentJob(job);
+            setShowReviewModal(true);
+            setReviewStep(1);
+          } catch (e) {
+            console.error('Error ensuring job exists for review:', e);
+          } finally {
+            // Clear the URL param so it doesn't run again on refresh
+            navigate('/search', { replace: true });
+          }
+        };
+
+        ensureJobAndReview();
+      }
+    }
+  }, [user, workers, params, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -610,6 +683,32 @@ export default function WorkerSearch() {
                               )}
                             </>
                           )}
+
+                          {stats.reviewsList && stats.reviewsList.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
+                              {stats.reviewsList.map((review, idx) => (
+                                <div key={review.id || idx} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm text-left">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <div className="font-bold text-sm text-gray-900">{review.profiles?.full_name || 'Anonymous User'}</div>
+                                    <div className="text-xs text-gray-400">
+                                      {new Date(review.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1 mb-2">
+                                    {review.rating === 5 ? <span className="text-xs">👍</span> : review.rating === 3 ? <span className="text-xs">😐</span> : <span className="text-xs">👎</span>}
+                                    <div className="flex gap-1">
+                                      {review.tags?.map(t => (
+                                        <span key={t} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-sm">{t}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  {review.comment && (
+                                    <p className="text-xs text-gray-600 italic leading-relaxed">"{review.comment}"</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </>
                     );
@@ -741,7 +840,7 @@ export default function WorkerSearch() {
 
               {reviewStep === 2 && (
                 <div className="animate-in slide-in-from-right-4">
-                  <div className="flex flex-wrap gap-2.5 mb-8 justify-center">
+                  <div className="flex flex-wrap gap-2.5 mb-6 justify-center">
                     {['🛠️ Good work', '😊 Respectful', '⏱️ Fast', '💰 Fair price'].map(tag => (
                       <button
                         key={tag}
@@ -755,6 +854,15 @@ export default function WorkerSearch() {
                         {tag}
                       </button>
                     ))}
+                  </div>
+                  
+                  <div className="mb-6">
+                    <textarea
+                      placeholder="What did you like about them? (Optional)"
+                      value={reviewDraft.comment || ''}
+                      onChange={(e) => setReviewDraft(p => ({ ...p, comment: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none h-24 text-sm"
+                    />
                   </div>
                   <button onClick={() => setReviewStep(3)} className="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl text-lg transition-all shadow-md active:scale-[0.98]">Continue</button>
                 </div>

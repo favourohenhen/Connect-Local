@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { Eye, EyeOff, ArrowLeft, Phone, User, MapPin, ShieldCheck } from 'lucide-react';
 
 export default function UserSignup() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from || '/search';
+  
   const setRole = useAuthStore(state => state.setRole);
   const setUser = useAuthStore(state => state.setUser);
 
@@ -96,7 +99,7 @@ export default function UserSignup() {
         setUser(authData.user);
         setRole('customer');
 
-        navigate('/search');
+        navigate(from, { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during signup.');
