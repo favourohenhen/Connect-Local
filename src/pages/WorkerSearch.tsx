@@ -86,12 +86,17 @@ export default function WorkerSearch() {
 
         if (jobs && jobs.length > 0) {
           setCurrentJob(jobs[0]);
-          const { data: reviews } = await supabase
+          // Check if this user has already reviewed THIS worker (across any job),
+          // not just the latest job — prevents the review button showing again
+          // if the user reviewed a previous job with the same worker.
+          const { data: existingReview } = await supabase
             .from('reviews')
             .select('*')
-            .eq('job_id', jobs[0].id)
+            .eq('worker_id', selectedWorker.id)
+            .eq('user_id', user.id)
+            .limit(1)
             .maybeSingle();
-          setCurrentReview(reviews || null);
+          setCurrentReview(existingReview || null);
         } else {
           setCurrentJob(null);
           setCurrentReview(null);
@@ -213,7 +218,14 @@ export default function WorkerSearch() {
 
     if (data && !error) {
       setCurrentReview(data);
-      setAllReviews([...allReviews, data]);
+
+      // Re-fetch ALL reviews from the DB (with profiles joined) so that:
+      // 1. Existing dummy/seed reviews are preserved in the list.
+      // 2. The newly inserted review renders with the correct profile name.
+      const { data: freshReviews } = await supabase
+        .from('reviews')
+        .select('*, profiles(full_name)');
+      if (freshReviews) setAllReviews(freshReviews);
 
       // If user said they'd rehire, increment the worker's recommendation count
       if (finalDraft.would_rehire) {
@@ -233,58 +245,10 @@ export default function WorkerSearch() {
   const getWorkerStats = (workerId: string) => {
     const workerReviews = allReviews.filter(r => r.worker_id === workerId);
     const w = workers.find(w => w.id === workerId);
-
-    if (workerReviews.length === 0) {
-      const recs = w?.recommended_by || 0;
-      if (recs > 0) {
-        // Align community reviews with the dummy recommends count so the total exactly equals recommends
-        const bad = Math.floor(recs * 0.05);
-        const okay = Math.floor(recs * 0.1);
-        const good = recs - okay - bad;
-        const total = recs;
-        const avgRating = total > 0 ? ((good * 5 + okay * 3 + bad * 1) / total).toFixed(1) : "0.0";
-        
-        // Generate a couple fake reviews for the demo
-        const fakeNames = ["Sarah M.", "David O.", "Michael T."];
-        const fakeComments = [
-          "Did a fantastic job! Very professional and finished on time. Would highly recommend.",
-          "Good service, very affordable.",
-          "Punctual and reliable."
-        ];
-        const reviewsList: LocalReview[] = Array.from({ length: Math.min(recs, 3) }).map((_, i) => ({
-          id: `fake-${i}`,
-          job_id: 'fake',
-          user_id: 'fake',
-          worker_id: workerId,
-          rating: 5,
-          tags: ['Professional', 'Punctual', 'Affordable'].slice(0, i + 1),
-          would_rehire: true,
-          comment: fakeComments[i],
-          profiles: { full_name: fakeNames[i] },
-          created_at: new Date(Date.now() - (i + 1) * 86400000 * 5).toISOString()
-        }));
-
-        return {
-          rating: Number(avgRating),
-          recommends: recs,
-          good, okay, bad,
-          tags: ['Professional', 'Punctual', 'Affordable'].slice(0, Math.max(1, Math.ceil(recs / 10))),
-          reviewsList
-        };
-      }
-
-      return {
-        rating: 0,
-        recommends: 0,
-        good: 0, okay: 0, bad: 0,
-        tags: [] as string[],
-        reviewsList: [] as LocalReview[]
-      };
-    }
+    const recommends = w?.recommended_by || 0;
 
     let sum = 0, good = 0, okay = 0, bad = 0;
     const tagCounts: Record<string, number> = {};
-    let recommends = w?.recommended_by || 0;
 
     workerReviews.forEach(r => {
       sum += r.rating;
@@ -295,14 +259,58 @@ export default function WorkerSearch() {
       r.tags?.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
     });
 
-    const tags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+    const realTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+    const realReviewsList = workerReviews.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    const realRecommends = workerReviews.filter(r => r.would_rehire).length;
+    const baselineRecs = Math.max(0, recommends - realRecommends);
+
+    let syntheticGood = 0, syntheticOkay = 0, syntheticBad = 0;
+    let fakeReviewsList: LocalReview[] = [];
+
+    if (baselineRecs > 0) {
+      syntheticBad = Math.floor(baselineRecs * 0.05);
+      syntheticOkay = Math.floor(baselineRecs * 0.1);
+      syntheticGood = baselineRecs - syntheticOkay - syntheticBad;
+
+      const fakeNames = ["Sarah M.", "David O.", "Michael T."];
+      const fakeComments = [
+        "Did a fantastic job! Very professional and finished on time. Would highly recommend.",
+        "Good service, very affordable.",
+        "Punctual and reliable."
+      ];
+
+      fakeReviewsList = Array.from({ length: Math.min(baselineRecs, 3) }).map((_, i) => ({
+        id: `fake-${i}`,
+        job_id: 'fake',
+        user_id: 'fake',
+        worker_id: workerId,
+        rating: 5,
+        tags: ['Professional', 'Punctual', 'Affordable'].slice(0, i + 1),
+        would_rehire: true,
+        comment: fakeComments[i % 3],
+        profiles: { full_name: fakeNames[i % 3] },
+        created_at: new Date(Date.now() - (i + 1) * 86400000 * 5).toISOString()
+      }));
+
+      sum += (syntheticGood * 5 + syntheticOkay * 3 + syntheticBad * 1);
+    }
+
+    const totalReviews = workerReviews.length + baselineRecs;
+    const rating = totalReviews > 0 ? (sum / totalReviews).toFixed(1) : "0.0";
+    
+    // Determine tags to show: combine real ones and some fake ones
+    const baseTags = ['Professional', 'Punctual', 'Affordable'].slice(0, Math.max(1, Math.ceil(recommends / 10)));
+    const combinedTags = Array.from(new Set([...realTags, ...baseTags]));
 
     return {
-      rating: (sum / workerReviews.length).toFixed(1),
+      rating: Number(rating),
       recommends,
-      good, okay, bad,
-      tags,
-      reviewsList: workerReviews.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      good: good + syntheticGood,
+      okay: okay + syntheticOkay,
+      bad: bad + syntheticBad,
+      tags: combinedTags,
+      reviewsList: [...realReviewsList, ...fakeReviewsList]
     };
   };
 
