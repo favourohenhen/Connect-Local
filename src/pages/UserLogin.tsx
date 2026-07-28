@@ -13,7 +13,7 @@ export default function UserLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from || '/user/dashboard';
+  const from = (location.state as any)?.from || '/search';
   const setRole = useAuthStore(state => state.setRole);
   const setUser = useAuthStore(state => state.setUser);
 

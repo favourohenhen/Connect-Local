@@ -96,7 +96,7 @@ export default function UserSignup() {
         setUser(authData.user);
         setRole('customer');
 
-        navigate('/user/dashboard');
+        navigate('/search');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during signup.');
