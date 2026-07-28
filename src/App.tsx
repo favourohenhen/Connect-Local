@@ -77,9 +77,9 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
-      {/* Protected browse routes — must be logged in to view workers */}
-      <Route path="/search" element={<RequireAuth><WorkerSearch /></RequireAuth>} />
-      <Route path="/worker/:id" element={<RequireAuth><WorkerProfile /></RequireAuth>} />
+      {/* Public browse routes — users can browse freely, login required to hire */}
+      <Route path="/search" element={<WorkerSearch />} />
+      <Route path="/worker/:id" element={<WorkerProfile />} />
 
       {/* Auth Routes */}
       <Route path="/login" element={

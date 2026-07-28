@@ -60,7 +60,7 @@ export default function WorkerSearch() {
   // Modal State
   const [selectedWorker, setSelectedWorker] = useState<WorkerSummary | null>(null);
   const [copiedPhone, setCopiedPhone] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [demoNumberRevealed, setDemoNumberRevealed] = useState(false);
 
   // Job & Review State
   const [currentJob, setCurrentJob] = useState<LocalJob | null>(null);
@@ -143,6 +143,12 @@ export default function WorkerSearch() {
   const handleConfirmJob = async (didComplete: boolean) => {
     if (!currentJob) return;
     const newStatus = didComplete ? 'completed' : 'failed';
+    
+    if (currentJob.id === 'demo-job-id') {
+      setCurrentJob({ ...currentJob, status: newStatus as any });
+      return;
+    }
+
     const { data, error } = await supabase
       .from('jobs')
       .update({ status: newStatus })
@@ -156,7 +162,33 @@ export default function WorkerSearch() {
   };
 
   const handleSubmitReview = async (finalDraft: Partial<LocalReview>) => {
-    if (!currentJob || !user || !selectedWorker) return;
+    if (!currentJob || !selectedWorker) return;
+
+    if (currentJob.id === 'demo-job-id') {
+      const fakeReview = {
+        id: 'demo-review-id',
+        job_id: currentJob.id,
+        user_id: 'demo-user',
+        worker_id: selectedWorker.id,
+        rating: finalDraft.rating || 5,
+        tags: finalDraft.tags || [],
+        would_rehire: finalDraft.would_rehire || false,
+        created_at: new Date().toISOString()
+      } as LocalReview;
+
+      setCurrentReview(fakeReview);
+      setAllReviews([...allReviews, fakeReview]);
+
+      if (finalDraft.would_rehire) {
+        setWorkers(prev => prev.map(w => w.id === selectedWorker.id ? { ...w, recommended_by: (w.recommended_by || 0) + 1 } : w));
+        setSelectedWorker(prev => prev ? { ...prev, recommended_by: (prev.recommended_by || 0) + 1 } : null);
+      }
+      setShowReviewModal(false);
+      return;
+    }
+
+    if (!user) return; // Real db calls require user
+
     const { data, error } = await supabase
       .from('reviews')
       .insert({
@@ -584,25 +616,7 @@ export default function WorkerSearch() {
                   })()}
 
                   {/* Job & Review Flow */}
-                  {showLoginPrompt ? (
-                    <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                      <p className="text-amber-800 font-medium text-sm mb-3">Log in to track jobs and leave reviews</p>
-                      <div className="flex gap-2 justify-center">
-                        <button
-                          onClick={() => { setShowLoginPrompt(false); navigate('/user/login'); }}
-                          className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-full"
-                        >
-                          Login
-                        </button>
-                        <button
-                          onClick={() => setShowLoginPrompt(false)}
-                          className="bg-gray-100 text-gray-600 text-sm font-medium px-4 py-2 rounded-full"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : currentJob?.status === 'pending' ? (
+                  {currentJob?.status === 'pending' ? (
                     <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center shadow-sm animate-in fade-in duration-300">
                       <h3 className="font-bold text-blue-900 mb-1 text-lg">Did this person do the job?</h3>
                       <p className="text-sm text-blue-700 mb-4 opacity-80">You recently contacted them for service.</p>
@@ -646,14 +660,47 @@ export default function WorkerSearch() {
 
                   <div className="mt-auto">
                     {selectedWorker.is_available ? (
-                      <a
-                        href={`tel:${selectedWorker.contact_phone}`}
-                        onClick={() => handleCallClick(selectedWorker.contact_phone, selectedWorker.id)}
-                        className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
-                      >
-                        <Phone className="w-6 h-6" />
-                        {copiedPhone ? 'Number Copied!' : (selectedWorker.contact_phone ? `Call ${selectedWorker.contact_phone}` : 'Call Directly')}
-                      </a>
+                      !user ? (
+                        !demoNumberRevealed ? (
+                          <button
+                            onClick={() => setDemoNumberRevealed(true)}
+                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
+                          >
+                            <Phone className="w-6 h-6" />
+                            Show the number
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              if (!currentJob) {
+                                setCurrentJob({
+                                  id: 'demo-job-id',
+                                  worker_id: selectedWorker.id,
+                                  user_id: 'demo-user',
+                                  status: 'pending',
+                                  created_at: new Date().toISOString()
+                                } as LocalJob);
+                              }
+                            }}
+                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
+                          >
+                            <Phone className="w-6 h-6" />
+                            Call {selectedWorker.contact_phone}
+                          </button>
+                        )
+                      ) : (
+                        <a
+                          href={`tel:${selectedWorker.contact_phone}`}
+                          onClick={(e) => {
+                            if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) e.preventDefault();
+                            handleCallClick(selectedWorker.contact_phone, selectedWorker.id);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
+                        >
+                          <Phone className="w-6 h-6" />
+                          {copiedPhone ? 'Number Copied!' : (selectedWorker.contact_phone ? `Call ${selectedWorker.contact_phone}` : 'Call Directly')}
+                        </a>
+                      )
                     ) : (
                       <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-200 text-gray-500 py-4 rounded-full font-bold text-lg cursor-not-allowed">
                         Currently Busy
