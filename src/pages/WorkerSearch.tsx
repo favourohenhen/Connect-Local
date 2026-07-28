@@ -143,7 +143,7 @@ export default function WorkerSearch() {
   const handleConfirmJob = async (didComplete: boolean) => {
     if (!currentJob) return;
     const newStatus = didComplete ? 'completed' : 'failed';
-    
+
     if (currentJob.id === 'demo-job-id') {
       setCurrentJob({ ...currentJob, status: newStatus as any });
       return;
@@ -234,7 +234,7 @@ export default function WorkerSearch() {
         const good = recs - okay - bad;
         const total = recs;
         const avgRating = total > 0 ? ((good * 5 + okay * 3 + bad * 1) / total).toFixed(1) : "0.0";
-        
+
         return {
           rating: Number(avgRating),
           recommends: recs,
@@ -588,7 +588,7 @@ export default function WorkerSearch() {
                         {/* Reviews Breakdown */}
                         <div className="mb-6 bg-gray-50 rounded-xl p-4 border border-gray-100 shadow-inner">
                           <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">Community Reviews</h4>
-                          
+
                           {(stats.good === 0 && stats.okay === 0 && stats.bad === 0) ? (
                             <div className="text-center py-4 bg-white rounded-lg border border-gray-200 border-dashed">
                               <p className="text-sm text-gray-500 italic">No community reviews yet.</p>
