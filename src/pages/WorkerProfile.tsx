@@ -22,8 +22,6 @@ interface Worker {
 export default function WorkerProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user } = useAuthStore();
   const [worker, setWorker] = useState<Worker | null>(null);
   const [loading, setLoading] = useState(true);
 
