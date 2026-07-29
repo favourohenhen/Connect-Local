@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Phone } from 'lucide-react';
-import { useAuthStore } from '../store/useAuthStore';
+
 
 interface Worker {
   id: string;
