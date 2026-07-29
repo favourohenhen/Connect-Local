@@ -120,6 +120,10 @@ export default function Signup() {
       if (authError) throw authError;
 
       if (authData.user) {
+        if (!authData.session) {
+          throw new Error('Authentication session missing. Please verify your email or try again.');
+        }
+
         let profileUrl = '';
         let coverUrl = '';
 
@@ -152,7 +156,10 @@ export default function Signup() {
           phone_number: formData.phone,
           role: 'worker'
         });
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile insert error:', profileError);
+          throw profileError;
+        }
 
         // Insert into workers
         const { error: workerError } = await supabase.from('workers').insert({
@@ -170,7 +177,10 @@ export default function Signup() {
           trust_score: 80,
           recommended_by: 0
         });
-        if (workerError) throw workerError;
+        if (workerError) {
+          console.error('Worker insert error:', workerError);
+          throw workerError;
+        }
 
         setUser(authData.user);
         setRole('worker');
