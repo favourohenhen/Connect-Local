@@ -243,6 +243,8 @@ export default function WorkerSearch() {
 
   const getWorkerStats = (workerId: string) => {
     const workerReviews = allReviews.filter(r => r.worker_id === workerId);
+    const w = workers.find(w => w.id === workerId);
+    const baselineRecs = w?.recommended_by || 0;
 
     let sum = 0, good = 0, okay = 0, bad = 0;
     const tagCounts: Record<string, number> = {};
@@ -259,19 +261,53 @@ export default function WorkerSearch() {
     const realTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
     const realReviewsList = workerReviews.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-    const recommends = workerReviews.filter(r => r.would_rehire).length;
+    const realRecommends = workerReviews.filter(r => r.would_rehire).length;
 
-    const totalReviews = workerReviews.length;
+    let syntheticGood = 0, syntheticOkay = 0, syntheticBad = 0;
+    let fakeReviewsList: any[] = [];
+
+    if (baselineRecs > 0) {
+      syntheticBad = Math.floor(baselineRecs * 0.05);
+      syntheticOkay = Math.floor(baselineRecs * 0.1);
+      syntheticGood = baselineRecs - syntheticOkay - syntheticBad;
+
+      const fakeNames = ["Sarah M.", "David O.", "Michael T."];
+      const fakeComments = [
+        "Did a fantastic job! Very professional and finished on time. Would highly recommend.",
+        "Good service, very affordable.",
+        "Punctual and reliable."
+      ];
+
+      fakeReviewsList = Array.from({ length: Math.min(baselineRecs, 3) }).map((_, i) => ({
+        id: `fake-${i}`,
+        job_id: 'fake',
+        user_id: 'fake',
+        worker_id: workerId,
+        rating: 5,
+        tags: ['Professional', 'Punctual', 'Affordable'].slice(0, i + 1),
+        would_rehire: true,
+        comment: fakeComments[i % 3],
+        profiles: { full_name: fakeNames[i % 3] },
+        created_at: new Date(Date.now() - (i + 1) * 86400000 * 5).toISOString()
+      }));
+
+      sum += (syntheticGood * 5 + syntheticOkay * 3 + syntheticBad * 1);
+    }
+
+    const totalReviews = workerReviews.length + baselineRecs;
     const rating = totalReviews > 0 ? (sum / totalReviews).toFixed(1) : "0.0";
     
+    const baseTags = ['Professional', 'Punctual', 'Affordable'].slice(0, Math.max(1, Math.ceil(baselineRecs / 10)));
+    const combinedTags = Array.from(new Set([...realTags, ...baseTags]));
+
     return {
       rating: Number(rating),
-      recommends,
-      good,
-      okay,
-      bad,
-      tags: realTags,
-      reviewsList: realReviewsList
+      recommends: baselineRecs + realRecommends,
+      good: good + syntheticGood,
+      okay: okay + syntheticOkay,
+      bad: bad + syntheticBad,
+      tags: combinedTags,
+      reviewsList: [...realReviewsList, ...fakeReviewsList]
     };
   };
 
@@ -523,7 +559,7 @@ export default function WorkerSearch() {
                     <div className="flex items-center justify-center bg-blue-50/50 p-2 rounded-lg border border-blue-100 mt-2">
                       <div className="flex items-center gap-1.5 font-bold text-blue-700">
                         <Star className="w-4 h-4 fill-current" />
-                        <span>{allReviews.filter(r => r.worker_id === worker.id && r.would_rehire).length} Recommendations</span>
+                        <span>{(worker.recommended_by || 0) + allReviews.filter(r => r.worker_id === worker.id && r.would_rehire).length} Recommendations</span>
                       </div>
                     </div>
                   </div>

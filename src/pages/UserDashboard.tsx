@@ -103,7 +103,8 @@ export default function UserDashboard() {
       if (data) {
         data.forEach(w => {
           const dynamicRecs = workerReviews ? workerReviews.filter(r => r.worker_id === w.id && r.would_rehire).length : 0;
-          details[w.id] = { ...w, profile_image: w.profile_image_url || w.profile_image, dynamically_recommended_by: dynamicRecs };
+          const combinedRecs = (w.recommended_by || 0) + dynamicRecs;
+          details[w.id] = { ...w, profile_image: w.profile_image_url || w.profile_image, dynamically_recommended_by: combinedRecs };
         });
       }
       setWorkerDetails(details);

@@ -44,7 +44,8 @@ export default function WorkerDashboard() {
       
       if (data) {
         const dynamicRecs = myReviews ? myReviews.filter(r => r.would_rehire).length : 0;
-        setWorkerData({ ...data, dynamically_recommended_by: dynamicRecs });
+        const combinedRecs = (data.recommended_by || 0) + dynamicRecs;
+        setWorkerData({ ...data, dynamically_recommended_by: combinedRecs });
         setEditForm({
           contact_phone: data.contact_phone || '',
           bio: data.bio || '',
