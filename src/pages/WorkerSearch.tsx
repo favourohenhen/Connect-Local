@@ -702,7 +702,7 @@ export default function WorkerSearch() {
                                   <div className="flex items-center gap-1 mb-2">
                                     {review.rating === 5 ? <span className="text-xs">👍</span> : review.rating === 3 ? <span className="text-xs">😐</span> : <span className="text-xs">👎</span>}
                                     <div className="flex gap-1">
-                                      {review.tags?.map(t => (
+                                      {review.tags?.map((t: string) => (
                                         <span key={t} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-sm">{t}</span>
                                       ))}
                                     </div>
