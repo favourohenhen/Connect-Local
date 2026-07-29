@@ -75,7 +75,7 @@ export default function AdminDashboard() {
   };
 
   const handleApprove = async (workerId: string) => {
-    const { error } = await supabase.from('workers').update({ status: 'verified' }).eq('id', workerId);
+    const { error } = await supabase.rpc('approve_worker', { worker_id: workerId });
     if (!error) {
       setWorkers(prev => prev.filter(w => w.id !== workerId));
       setPreview(null);
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
   const handleReject = async (workerId: string) => {
     if (!window.confirm('Remove this worker from the platform? This cannot be undone.')) return;
 
-    const { error } = await supabase.from('workers').delete().eq('id', workerId);
+    const { error } = await supabase.rpc('reject_worker', { worker_id: workerId });
     if (!error) {
       setWorkers(prev => prev.filter(w => w.id !== workerId));
       setPreview(null);
