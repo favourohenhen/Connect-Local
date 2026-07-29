@@ -94,10 +94,12 @@ export default function WorkerProfile() {
                 <div className="text-sm text-gray-500">Trust Score</div>
                 <div className="font-bold text-gray-900 text-lg">{worker.trust_score}</div>
               </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-500">Experience</div>
-                <div className="font-bold text-gray-900 text-lg">{worker.years_experience} yrs</div>
-              </div>
+              {worker.years_experience != null && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-sm text-gray-500">Experience</div>
+                  <div className="font-bold text-gray-900 text-lg">{worker.years_experience} yrs</div>
+                </div>
+              )}
             </div>
           </div>
           

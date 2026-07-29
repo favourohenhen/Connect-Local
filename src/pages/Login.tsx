@@ -46,6 +46,7 @@ export default function Login() {
 
         if (profileError) {
           console.error('Failed to fetch profile:', profileError);
+          throw new Error('Could not verify your account. Please try again.');
         } else if (profileData) {
           if (profileData.role !== 'worker') {
             await supabase.auth.signOut();
@@ -53,9 +54,12 @@ export default function Login() {
           }
           setRole(profileData.role);
           setUser(authData.user);
+          navigate('/dashboard');
+        } else {
+          // No profile found — sign out and show error
+          await supabase.auth.signOut();
+          throw new Error('Account not found. Please sign up first.');
         }
-
-        navigate('/dashboard');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid phone number or password.');

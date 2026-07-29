@@ -228,13 +228,20 @@ export default function WorkerSearch() {
     if (data && !error) {
       setCurrentReview(data);
 
-      // Re-fetch ALL reviews from the DB (with profiles joined) so that:
-      // 1. Existing dummy/seed reviews are preserved in the list.
+      // Re-fetch reviews for this worker only (not the whole table) so that:
+      // 1. Existing seed reviews are preserved in the list.
       // 2. The newly inserted review renders with the correct profile name.
       const { data: freshReviews } = await supabase
         .from('reviews')
-        .select('*, profiles(full_name)');
-      if (freshReviews) setAllReviews(freshReviews);
+        .select('*, profiles(full_name)')
+        .eq('worker_id', selectedWorker.id);
+      if (freshReviews) {
+        // Merge: keep reviews for other workers, replace reviews for this worker
+        setAllReviews(prev => [
+          ...prev.filter(r => r.worker_id !== selectedWorker.id),
+          ...freshReviews
+        ]);
+      }
 
       // If user said they'd rehire, the recommendation count will dynamically compute from allReviews
     }
@@ -396,7 +403,8 @@ export default function WorkerSearch() {
 
   // Handle post-login redirect for leaving a review
   useEffect(() => {
-    const reviewWorkerId = params.get('review_worker');
+    const currentParams = new URLSearchParams(location.search);
+    const reviewWorkerId = currentParams.get('review_worker');
     if (reviewWorkerId && user && workers.length > 0) {
       const worker = workers.find(w => w.id === reviewWorkerId);
       if (worker) {

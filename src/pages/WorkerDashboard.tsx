@@ -10,6 +10,7 @@ export default function WorkerDashboard() {
   const [workerData, setWorkerData] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
   const [editMode, setEditMode] = React.useState(false);
+  const [saveError, setSaveError] = React.useState('');
   const [editForm, setEditForm] = React.useState({
     contact_phone: '',
     bio: '',
@@ -115,12 +116,17 @@ export default function WorkerDashboard() {
       const { data, error } = await supabase.from('workers').update(updatePayload).eq('id', user?.id).select().maybeSingle();
       
       if (!error && data) {
-        setWorkerData({ ...workerData, ...data, profile_image: profileUrl });
+        // Keep both profile_image and profile_image_url in sync so completion bar
+        // and image previews show correctly without requiring a page refresh (BUG-04)
+        setWorkerData({ ...workerData, ...data, profile_image: profileUrl, profile_image_url: profileUrl });
         setEditForm(prev => ({ ...prev, profile_image: profileUrl, cover_image: coverUrl }));
         setProfileImageFile(null);
         setCoverImageFile(null);
+        setSaveError('');
+        setEditMode(false);
+      } else if (error) {
+        setSaveError('Failed to save. Please try again.');
       }
-      setEditMode(false);
     } catch (err) {
       console.error('Failed to save profile', err);
     } finally {
@@ -245,6 +251,11 @@ export default function WorkerDashboard() {
           </div>
           
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative">
+             {saveError && (
+               <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm font-medium px-4 py-3 rounded-lg">
+                 {saveError}
+               </div>
+             )}
              <div className="flex justify-between items-center mb-6">
                <h3 className="text-lg font-semibold text-gray-900">Profile Details</h3>
                {!editMode ? (

@@ -458,7 +458,9 @@ export default function UserDashboard() {
                   {/* Job & Review Flow inside Modal */}
                   {(() => {
                     const currentJob = myJobs.find(j => j.worker_id === selectedWorkerForModal.id);
-                    const currentReview = myReviews.find(r => r.job_id === currentJob?.id);
+                    // Match by worker_id (consistent with WorkerSearch) to prevent review button
+                    // re-appearing if user had a second job with the same worker (BUG-05)
+                    const currentReview = myReviews.find(r => r.worker_id === selectedWorkerForModal.id);
                     
                     return currentJob?.status === 'pending' ? (
                      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center shadow-sm animate-in fade-in duration-300">
