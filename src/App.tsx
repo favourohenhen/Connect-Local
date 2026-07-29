@@ -70,7 +70,7 @@ function App() {
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
       {/* 
-        FLOW: Public browse routes — guests can search, view worker profiles, and see phone numbers directly. 
+        FLOW: Public browse routes — guests can search, view worker profiles, click 'Show the number' and call freely.
         They are only prompted to login/signup when they try to leave a review for a worker.
       */}
       <Route path="/search" element={<WorkerSearch />} />

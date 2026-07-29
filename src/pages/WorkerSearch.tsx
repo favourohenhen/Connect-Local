@@ -63,6 +63,7 @@ export default function WorkerSearch() {
   // Modal State
   const [selectedWorker, setSelectedWorker] = useState<WorkerSummary | null>(null);
   const [copiedPhone, setCopiedPhone] = useState(false);
+  const [demoNumberRevealed, setDemoNumberRevealed] = useState(false);
 
   // Job & Review State
   const [currentJob, setCurrentJob] = useState<LocalJob | null>(null);
@@ -387,6 +388,7 @@ export default function WorkerSearch() {
 
   const closeModal = () => {
     setSelectedWorker(null);
+    setDemoNumberRevealed(false);
     document.body.style.overflow = 'auto';
   };
 
@@ -771,31 +773,41 @@ export default function WorkerSearch() {
                   <div className="mt-auto">
                     {selectedWorker.is_available ? (
                       !user ? (
-                        // GUEST FLOW: Non-logged-in users can see the phone number and call immediately.
+                        // GUEST FLOW: Non-logged-in users must click "Show the number" first.
                         // We simulate a fake "demo job" in local state when they call so they can still trigger 
                         // the review prompt later (which is when they'll be asked to sign up).
-                        <a
-                          href={`tel:${selectedWorker.contact_phone}`}
-                          onClick={() => {
-                            if (!currentJob && !isCalling) {
-                              setIsCalling(true);
-                              setTimeout(() => {
-                                setCurrentJob({
-                                  id: 'demo-job-id',
-                                  worker_id: selectedWorker.id,
-                                  user_id: 'demo-user',
-                                  status: 'pending',
-                                  created_at: new Date().toISOString()
-                                } as LocalJob);
-                                setIsCalling(false);
-                              }, 2000);
-                            }
-                          }}
-                          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
-                        >
-                          <Phone className="w-6 h-6" />
-                          Call {selectedWorker.contact_phone}
-                        </a>
+                        !demoNumberRevealed ? (
+                          <button
+                            onClick={() => setDemoNumberRevealed(true)}
+                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
+                          >
+                            <Phone className="w-6 h-6" />
+                            Show the number
+                          </button>
+                        ) : (
+                          <a
+                            href={`tel:${selectedWorker.contact_phone}`}
+                            onClick={() => {
+                              if (!currentJob && !isCalling) {
+                                setIsCalling(true);
+                                setTimeout(() => {
+                                  setCurrentJob({
+                                    id: 'demo-job-id',
+                                    worker_id: selectedWorker.id,
+                                    user_id: 'demo-user',
+                                    status: 'pending',
+                                    created_at: new Date().toISOString()
+                                  } as LocalJob);
+                                  setIsCalling(false);
+                                }, 2000);
+                              }
+                            }}
+                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
+                          >
+                            <Phone className="w-6 h-6" />
+                            Call {selectedWorker.contact_phone}
+                          </a>
+                        )
                       ) : (
                         // LOGGED-IN USER FLOW: Real users create a real job record in the DB when they call.
                         <a
