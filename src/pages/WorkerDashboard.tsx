@@ -36,9 +36,15 @@ export default function WorkerDashboard() {
         .select('*, profiles!workers_id_fkey(full_name)')
         .eq('id', user?.id)
         .maybeSingle();
+
+      const { data: myReviews } = await supabase
+        .from('reviews')
+        .select('would_rehire')
+        .eq('worker_id', user?.id);
       
       if (data) {
-        setWorkerData(data);
+        const dynamicRecs = myReviews ? myReviews.filter(r => r.would_rehire).length : 0;
+        setWorkerData({ ...data, dynamically_recommended_by: dynamicRecs });
         setEditForm({
           contact_phone: data.contact_phone || '',
           bio: data.bio || '',
@@ -232,7 +238,7 @@ export default function WorkerDashboard() {
               </div>
               <div className="bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-500" />
-                <span className="font-bold text-gray-900">{workerData?.recommended_by || 0} Recommendations</span>
+                <span className="font-bold text-gray-900">{workerData?.dynamically_recommended_by || 0} Recommendations</span>
               </div>
             </div>
           </div>

@@ -203,8 +203,7 @@ export default function WorkerSearch() {
       setAllReviews([...allReviews, fakeReview]);
 
       if (finalDraft.would_rehire) {
-        setWorkers(prev => prev.map(w => w.id === selectedWorker.id ? { ...w, recommended_by: (w.recommended_by || 0) + 1 } : w));
-        setSelectedWorker(prev => prev ? { ...prev, recommended_by: (prev.recommended_by || 0) + 1 } : null);
+        // UI will automatically update based on the new review in allReviews
       }
       setShowReviewModal(false);
       return;
@@ -237,25 +236,13 @@ export default function WorkerSearch() {
         .select('*, profiles(full_name)');
       if (freshReviews) setAllReviews(freshReviews);
 
-      // If user said they'd rehire, increment the worker's recommendation count
-      if (finalDraft.would_rehire) {
-        await supabase.rpc('increment_recommended_by', { worker_id: selectedWorker.id });
-        // Update the count locally so the UI reflects it immediately
-        setWorkers(prev => prev.map(w =>
-          w.id === selectedWorker.id
-            ? { ...w, recommended_by: (w.recommended_by || 0) + 1 }
-            : w
-        ));
-        setSelectedWorker(prev => prev ? { ...prev, recommended_by: (prev.recommended_by || 0) + 1 } : null);
-      }
+      // If user said they'd rehire, the recommendation count will dynamically compute from allReviews
     }
     setShowReviewModal(false);
   };
 
   const getWorkerStats = (workerId: string) => {
     const workerReviews = allReviews.filter(r => r.worker_id === workerId);
-    const w = workers.find(w => w.id === workerId);
-    const recommends = w?.recommended_by || 0;
 
     let sum = 0, good = 0, okay = 0, bad = 0;
     const tagCounts: Record<string, number> = {};
@@ -272,55 +259,19 @@ export default function WorkerSearch() {
     const realTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
     const realReviewsList = workerReviews.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-    const realRecommends = workerReviews.filter(r => r.would_rehire).length;
-    const baselineRecs = Math.max(0, recommends - realRecommends);
+    const recommends = workerReviews.filter(r => r.would_rehire).length;
 
-    let syntheticGood = 0, syntheticOkay = 0, syntheticBad = 0;
-    let fakeReviewsList: LocalReview[] = [];
-
-    if (baselineRecs > 0) {
-      syntheticBad = Math.floor(baselineRecs * 0.05);
-      syntheticOkay = Math.floor(baselineRecs * 0.1);
-      syntheticGood = baselineRecs - syntheticOkay - syntheticBad;
-
-      const fakeNames = ["Sarah M.", "David O.", "Michael T."];
-      const fakeComments = [
-        "Did a fantastic job! Very professional and finished on time. Would highly recommend.",
-        "Good service, very affordable.",
-        "Punctual and reliable."
-      ];
-
-      fakeReviewsList = Array.from({ length: Math.min(baselineRecs, 3) }).map((_, i) => ({
-        id: `fake-${i}`,
-        job_id: 'fake',
-        user_id: 'fake',
-        worker_id: workerId,
-        rating: 5,
-        tags: ['Professional', 'Punctual', 'Affordable'].slice(0, i + 1),
-        would_rehire: true,
-        comment: fakeComments[i % 3],
-        profiles: { full_name: fakeNames[i % 3] },
-        created_at: new Date(Date.now() - (i + 1) * 86400000 * 5).toISOString()
-      }));
-
-      sum += (syntheticGood * 5 + syntheticOkay * 3 + syntheticBad * 1);
-    }
-
-    const totalReviews = workerReviews.length + baselineRecs;
+    const totalReviews = workerReviews.length;
     const rating = totalReviews > 0 ? (sum / totalReviews).toFixed(1) : "0.0";
     
-    // Determine tags to show: combine real ones and some fake ones
-    const baseTags = ['Professional', 'Punctual', 'Affordable'].slice(0, Math.max(1, Math.ceil(recommends / 10)));
-    const combinedTags = Array.from(new Set([...realTags, ...baseTags]));
-
     return {
       rating: Number(rating),
       recommends,
-      good: good + syntheticGood,
-      okay: okay + syntheticOkay,
-      bad: bad + syntheticBad,
-      tags: combinedTags,
-      reviewsList: [...realReviewsList, ...fakeReviewsList]
+      good,
+      okay,
+      bad,
+      tags: realTags,
+      reviewsList: realReviewsList
     };
   };
 
@@ -572,7 +523,7 @@ export default function WorkerSearch() {
                     <div className="flex items-center justify-center bg-blue-50/50 p-2 rounded-lg border border-blue-100 mt-2">
                       <div className="flex items-center gap-1.5 font-bold text-blue-700">
                         <Star className="w-4 h-4 fill-current" />
-                        <span>{worker.recommended_by || 0} Recommendations</span>
+                        <span>{allReviews.filter(r => r.worker_id === worker.id && r.would_rehire).length} Recommendations</span>
                       </div>
                     </div>
                   </div>

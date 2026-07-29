@@ -93,11 +93,17 @@ export default function UserDashboard() {
         .from('workers')
         .select('*, profiles!workers_id_fkey(full_name)')
         .in('id', workerIds);
+
+      const { data: workerReviews } = await supabase
+        .from('reviews')
+        .select('worker_id, would_rehire')
+        .in('worker_id', workerIds);
         
       const details: Record<string, any> = {};
       if (data) {
         data.forEach(w => {
-          details[w.id] = { ...w, profile_image: w.profile_image_url || w.profile_image };
+          const dynamicRecs = workerReviews ? workerReviews.filter(r => r.worker_id === w.id && r.would_rehire).length : 0;
+          details[w.id] = { ...w, profile_image: w.profile_image_url || w.profile_image, dynamically_recommended_by: dynamicRecs };
         });
       }
       setWorkerDetails(details);
@@ -136,10 +142,7 @@ export default function UserDashboard() {
 
     if (data && !error) {
       setMyReviews(prev => [...prev, data]);
-      // If user said they'd rehire, increment the worker's recommendation count
-      if (finalDraft.would_rehire) {
-        await supabase.rpc('increment_recommended_by', { worker_id: activeWorkerId });
-      }
+      // UI will dynamically fetch and count new reviews
     }
     setShowReviewModal(false);
   };
@@ -445,7 +448,7 @@ export default function UserDashboard() {
                     <div className="bg-blue-50 flex-1 p-3 rounded-xl border border-blue-100 text-center">
                       <div className="h-8 flex justify-center items-center gap-1 text-2xl font-bold text-blue-700">
                         <Star className="w-5 h-5 fill-current" />
-                        {selectedWorkerForModal.recommended_by || 0}
+                        {selectedWorkerForModal.dynamically_recommended_by || 0}
                       </div>
                       <div className="text-xs text-blue-600 uppercase font-bold tracking-wide mt-1">Recommendations</div>
                     </div>
