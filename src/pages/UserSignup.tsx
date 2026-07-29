@@ -7,6 +7,8 @@ import { Eye, EyeOff, ArrowLeft, Phone, User, MapPin, ShieldCheck } from 'lucide
 export default function UserSignup() {
   const navigate = useNavigate();
   const location = useLocation();
+  // FLOW: If a guest was prompted to sign up while trying to leave a review (e.g. from WorkerSearch),
+  // they will be redirected back to that specific worker's review flow after sign up.
   const from = (location.state as any)?.from || '/search';
   
   const setRole = useAuthStore(state => state.setRole);

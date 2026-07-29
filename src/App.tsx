@@ -69,7 +69,10 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
-      {/* Public browse routes — users can browse freely, login required to hire */}
+      {/* 
+        FLOW: Public browse routes — guests can search, view worker profiles, and see phone numbers directly. 
+        They are only prompted to login/signup when they try to leave a review for a worker.
+      */}
       <Route path="/search" element={<WorkerSearch />} />
       <Route path="/worker/:id" element={<WorkerProfile />} />
 

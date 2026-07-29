@@ -106,17 +106,12 @@ export default function WorkerProfile() {
           <div className="p-6">
              <h3 className="text-lg font-bold text-gray-900 mb-4">Contact</h3>
              {worker.contact_phone ? (
-               !user ? (
-                 <button onClick={() => navigate('/user/login', { state: { from: location.pathname } })} className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-xl font-medium transition-colors">
-                   <Phone className="w-5 h-5" />
-                   Login to View Number
-                 </button>
-               ) : (
-                 <a href={`tel:${worker.contact_phone}`} className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-xl font-medium transition-colors">
-                   <Phone className="w-5 h-5" />
-                   Direct Call
-                 </a>
-               )
+               // FLOW: Both logged-in users and guests can view the number and call directly.
+               // Guests will only be prompted to login if they try to leave a review (handled in WorkerSearch/UserDashboard).
+               <a href={`tel:${worker.contact_phone}`} className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-xl font-medium transition-colors">
+                 <Phone className="w-5 h-5" />
+                 Call {worker.contact_phone}
+               </a>
              ) : (
                <div className="w-full text-center p-3 bg-gray-50 text-gray-500 rounded-xl">Phone number not provided</div>
              )}

@@ -128,6 +128,10 @@ export default function UserDashboard() {
 
   const handleSubmitReview = async (finalDraft: Partial<LocalReview>) => {
     if (!user) return;
+    
+    // FLOW: This is where the user finally submits a review for a worker.
+    // If a guest started this process from WorkerSearch by clicking "Call", 
+    // they were prompted to login/signup, landed here, and now can submit the review.
     const { data, error } = await supabase
       .from('reviews')
       .insert({
