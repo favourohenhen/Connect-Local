@@ -47,6 +47,10 @@ export default function Login() {
         if (profileError) {
           console.error('Failed to fetch profile:', profileError);
         } else if (profileData) {
+          if (profileData.role !== 'worker') {
+            await supabase.auth.signOut();
+            throw new Error('This login portal is strictly for professionals. Please use the neighbour login.');
+          }
           setRole(profileData.role);
           setUser(authData.user);
         }

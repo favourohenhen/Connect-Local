@@ -60,7 +60,7 @@ export default function Signup() {
     const num = Math.floor(100 + Math.random() * 900);
     const pass = `${word}${num}!`;
     setFormData(prev => ({ ...prev, password: pass }));
-    setShowPassword(true);
+    setShowPassword(false);
   };
 
   const isStrongPassword = (pw: string) => {
