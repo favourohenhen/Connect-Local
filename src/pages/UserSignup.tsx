@@ -207,6 +207,7 @@ export default function UserSignup() {
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-12"
                 placeholder="At least 8 chars, letters & numbers"
+                autoComplete="new-password"
               />
               <button
                 type="button"

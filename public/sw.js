@@ -31,8 +31,15 @@ self.addEventListener('fetch', (event) => {
         
         // If navigation request fails and not in cache, fallback to index
         if (event.request.mode === 'navigate') {
-          return caches.match('/');
+          const indexResponse = await caches.match('/');
+          if (indexResponse) return indexResponse;
         }
+
+        // Return a generic fallback response to avoid TypeError: Failed to convert value to 'Response'
+        return new Response('Network error occurred', {
+          status: 408,
+          headers: { 'Content-Type': 'text/plain' },
+        });
       })
   );
 });
