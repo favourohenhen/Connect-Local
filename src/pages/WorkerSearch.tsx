@@ -73,6 +73,9 @@ export default function WorkerSearch() {
   const [reviewDraft, setReviewDraft] = useState<Partial<LocalReview>>({ tags: [] });
   const [reviewStep, setReviewStep] = useState(1);
 
+  // Call outcome flow: 'pickup_question' | 'job_question' | null
+  const [callOutcomeStep, setCallOutcomeStep] = useState<'pickup_question' | 'job_question' | null>(null);
+
   // Load active job and review when worker is selected
   useEffect(() => {
     async function loadJobAndReview() {
@@ -146,6 +149,7 @@ export default function WorkerSearch() {
           // Add 2s delay so the phone dialer can open without UI interruption
           setTimeout(() => {
             setCurrentJob(data);
+            setCallOutcomeStep('pickup_question');
             setIsCalling(false);
           }, 2000);
         } else {
@@ -155,31 +159,63 @@ export default function WorkerSearch() {
     }
   };
 
+  const handlePickedUp = async (didPickUp: boolean) => {
+    if (!currentJob) return;
+
+    if (currentJob.id === 'demo-job-id') {
+      if (didPickUp) {
+        setCallOutcomeStep('job_question');
+      } else {
+        setCurrentJob({ ...currentJob, status: 'failed' as any });
+        setCallOutcomeStep(null);
+      }
+      return;
+    }
+
+    if (didPickUp) {
+      // Optimistically move to the next question without waiting for the DB
+      setCallOutcomeStep('job_question');
+      await supabase
+        .from('jobs')
+        .update({ picked_up: true })
+        .eq('id', currentJob.id);
+    } else {
+      // Worker did NOT pick up — mark failed, store picked_up = false
+      const { data, error } = await supabase
+        .from('jobs')
+        .update({ status: 'failed', picked_up: false, job_completed: false })
+        .eq('id', currentJob.id)
+        .select()
+        .maybeSingle();
+
+      if (data && !error) setCurrentJob(data);
+      setCallOutcomeStep(null);
+    }
+  };
+
   const handleConfirmJob = async (didComplete: boolean) => {
     if (!currentJob) return;
     const newStatus = didComplete ? 'completed' : 'failed';
 
     if (currentJob.id === 'demo-job-id') {
       if (didComplete) {
-        // They want to leave a review! Prompt them to login, and bring them back here seamlessly.
         navigate('/user/login', { state: { from: `/search?review_worker=${selectedWorker?.id}` } });
       } else {
-        // Just cancel the flow locally
         setCurrentJob({ ...currentJob, status: 'failed' as any });
       }
+      setCallOutcomeStep(null);
       return;
     }
 
     const { data, error } = await supabase
       .from('jobs')
-      .update({ status: newStatus })
+      .update({ status: newStatus, job_completed: didComplete })
       .eq('id', currentJob.id)
       .select()
       .maybeSingle();
 
-    if (data && !error) {
-      setCurrentJob(data);
-    }
+    if (data && !error) setCurrentJob(data);
+    setCallOutcomeStep(null);
   };
 
   const handleSubmitReview = async (finalDraft: Partial<LocalReview>) => {
@@ -389,6 +425,7 @@ export default function WorkerSearch() {
   const closeModal = () => {
     setSelectedWorker(null);
     setDemoNumberRevealed(false);
+    setCallOutcomeStep(null);
     document.body.style.overflow = 'auto';
   };
 
@@ -728,13 +765,22 @@ export default function WorkerSearch() {
                   })()}
 
                   {/* Job & Review Flow */}
-                  {currentJob?.status === 'pending' ? (
+                  {currentJob?.status === 'pending' && callOutcomeStep === 'pickup_question' ? (
                     <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center shadow-sm animate-in fade-in duration-300">
-                      <h3 className="font-bold text-blue-900 mb-1 text-lg">Did this person do the job?</h3>
-                      <p className="text-sm text-blue-700 mb-4 opacity-80">You recently contacted them for service.</p>
+                      <h3 className="font-bold text-blue-900 mb-1 text-lg">Did the worker pick up?</h3>
+                      <p className="text-sm text-blue-700 mb-4 opacity-80">You just called them — did they answer?</p>
                       <div className="flex gap-3 justify-center">
-                        <button onClick={() => handleConfirmJob(true)} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><CheckCircle2 className="w-5 h-5" /> Yes</button>
-                        <button onClick={() => handleConfirmJob(false)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><XCircle className="w-5 h-5" /> No</button>
+                        <button onClick={() => handlePickedUp(true)} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><CheckCircle2 className="w-5 h-5" /> YES</button>
+                        <button onClick={() => handlePickedUp(false)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><XCircle className="w-5 h-5" /> NO</button>
+                      </div>
+                    </div>
+                  ) : currentJob?.status === 'pending' && callOutcomeStep === 'job_question' ? (
+                    <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center shadow-sm animate-in fade-in duration-300">
+                      <h3 className="font-bold text-blue-900 mb-1 text-lg">Did they complete the job?</h3>
+                      <p className="text-sm text-blue-700 mb-4 opacity-80">Did they show up and get the work done?</p>
+                      <div className="flex gap-3 justify-center">
+                        <button onClick={() => handleConfirmJob(true)} className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><CheckCircle2 className="w-5 h-5" /> YES</button>
+                        <button onClick={() => handleConfirmJob(false)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"><XCircle className="w-5 h-5" /> NO</button>
                       </div>
                     </div>
                   ) : currentJob?.status === 'completed' && !currentReview ? (
@@ -798,6 +844,7 @@ export default function WorkerSearch() {
                                     status: 'pending',
                                     created_at: new Date().toISOString()
                                   } as LocalJob);
+                                  setCallOutcomeStep('pickup_question');
                                   setIsCalling(false);
                                 }, 2000);
                               }
